@@ -34,7 +34,7 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 ## Assumptions
 * The column orders of the CSV files are constant.
 * The flow log, lookup table, and IANA protocols CSV files are all well-formed and have a header row.
-* Only the default v2 flow log is supported.
+* Only the [default v2 flow log](https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html) is supported.
 
 ## Considerations
 * Parallel processing is used where possible.
@@ -42,7 +42,7 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 * Hash-based comparisons were used for performant lookups where possible.
 
 ## Example
-flow_log.csv
+[flow_log.csv](data/flow_log.csv)
 ```
 version,account-id,interface-id,srcaddr,dstaddr,srcport,dstport,protocol,packets,bytes,start,end,action,log-status
 2,123456789012,eni-0a1b2c3d,10.0.1.201,198.51.100.2,443,49153,6,25,20000,1620140761,1620140821,ACCEPT,OK
