@@ -37,6 +37,8 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 * Only the [default v2 flow log](https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html) is supported.
 
 ## Considerations
+* This project was written for standalone compilation and execution on any system meeting the outlined requirements
+  without requiring a build tool (e.g. Maven or Gradle) or external libraries.
 * Parallel processing is used where possible.
 * Data streaming is used for memory constraints where possible.
 * Hash-based comparisons were used for performant lookups where possible.
