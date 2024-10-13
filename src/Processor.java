@@ -6,7 +6,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
- * This class
+ * This class calculates certain statistics for a flow log based on mappings of its {@link Protocol}s to {@link Tags}.
  */
 class Processor implements Runnable, Closeable {
     private static final int DESTINATION_PORT = 6;
