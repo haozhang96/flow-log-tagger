@@ -1,5 +1,9 @@
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * This class is a {@link CSVGenerator} that generates a flow log with a defined number of rows using randomly generated
+ *   data, and is mainly used for testing.
+ */
 class FlowLogGenerator extends CSVGenerator {
     private static final int[] PORTS = {23, 25, 80, 110, 143, 443, 993, 1024, 1030, 49152, 49153, 49154, 49321, 56000};
     private static final int[] PROTOCOLS = {1, 4, 6, 12, 17, 27, 41, 58, 115, 143};

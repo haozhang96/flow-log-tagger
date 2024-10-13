@@ -6,9 +6,9 @@ public class Main {
     //==================================================================================================================
 
     public static void main(String[] args) {
-        final var flowLog = new CSVReader(args.length > 0 ? Path.of(args[0]) : Constants.FLOW_LOG_PATH);
-        final var lookupTable = new LookupTable(new CSVReader(args.length > 1 ? Path.of(args[1]) : Constants.LOOKUP_TABLE_PATH));
-        final var output = new CSVWriter(args.length > 2 ? Path.of(args[2]) : Constants.OUTPUT_PATH, Constants.WRITE_OPTIONS);
-        new Processor(flowLog, lookupTable, output).run();
+        final var flowLog = args.length > 0 ? new CSVReader(Path.of(args[0])) : CSVReader.FLOW_LOG;
+        final var tags = args.length > 1 ? new Tags(new CSVReader(Path.of(args[1]))) : Tags.DEFAULT;
+        final var output = args.length > 2 ? new CSVWriter(Path.of(args[2])) : CSVWriter.OUTPUT;
+        new Processor(flowLog, tags, output).run();
     }
 }

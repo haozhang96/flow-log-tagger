@@ -1,4 +1,6 @@
 import java.io.Serial;
+import java.util.Collections;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -10,6 +12,8 @@ import java.util.stream.Collectors;
  *
  */
 class IANAProtocols extends CSVMap<String, Protocol> {
+    static Map<String, Protocol> DEFAULT = Collections.unmodifiableMap(new IANAProtocols(CSVReader.IANA_PROTOCOLS));
+
     private static final @Serial long serialVersionUID = 1L;
     private static final int DECIMAL = 0;
     private static final int KEYWORD = 1;
@@ -32,7 +36,7 @@ class IANAProtocols extends CSVMap<String, Protocol> {
 
     private static boolean isNumeric(String[] columns) {
         try {
-            // I could technically use Character.isDigit() using a loop over the characters but this is more compact.
+            // I could technically use Character.isDigit() with a loop over the characters but this is more compact.
             Integer.parseInt(columns[DECIMAL]);
             return true;
         } catch (NumberFormatException ignored) {

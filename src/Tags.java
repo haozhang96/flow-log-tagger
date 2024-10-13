@@ -1,4 +1,6 @@
 import java.io.Serial;
+import java.util.Collections;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +24,9 @@ import java.util.stream.Collectors;
  *   143,tcp,email
  * }
  */
-class LookupTable extends CSVMap<Protocol, String> {
+class Tags extends CSVMap<Protocol, String> {
+    static Map<Protocol, String> DEFAULT = Collections.unmodifiableMap(new Tags(CSVReader.LOOKUP_TABLE));
+
     private static final @Serial long serialVersionUID = 1L;
     private static final int PORT = 0;
     private static final int PROTOCOL = 1;
@@ -32,7 +36,7 @@ class LookupTable extends CSVMap<Protocol, String> {
     // Constructors
     //==================================================================================================================
 
-    LookupTable(CSVReader reader) {
+    Tags(CSVReader reader) {
         super(
             reader,
             Collectors.toMap(columns -> new Protocol(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG])

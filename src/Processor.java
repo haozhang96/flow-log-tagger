@@ -8,16 +8,16 @@ class Processor implements Runnable {
     private static final int PROTOCOL = 7;
 
     private final CSVGenerator flowLog;
-    private final LookupTable lookupTable;
+    private final Map<Protocol, String> tags;
     private final CSVWriter output;
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    Processor(CSVGenerator flowLog, LookupTable lookupTable, CSVWriter output) {
+    Processor(CSVGenerator flowLog, Map<Protocol, String> tags, CSVWriter output) {
         this.flowLog = flowLog;
-        this.lookupTable = lookupTable;
+        this.tags = tags;
         this.output = output;
     }
 
@@ -40,7 +40,7 @@ class Processor implements Runnable {
     //==================================================================================================================
 
     private void process(Stream<String[]> rows) {
-        final var input = new CSVWriter(Constants.INPUT_PATH, Constants.WRITE_OPTIONS);
+        final var input = new CSVWriter(Constants.INPUT_PATH);
         final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
             rows
                 .parallel()
@@ -79,11 +79,11 @@ class Processor implements Runnable {
     }
 
     private Protocol toProtocol(String[] columns) {
-        final var name = Constants.IANA_PROTOCOLS.getOrDefault(columns[PROTOCOL], Protocol.UNKNOWN).name();
+        final var name = IANAProtocols.DEFAULT.getOrDefault(columns[PROTOCOL], Protocol.UNKNOWN).name();
         return new Protocol(columns[DESTINATION_PORT], name);
     }
 
     private String getTag(Protocol protocol) {
-        return lookupTable.getOrDefault(protocol, Protocol.UNKNOWN.name());
+        return tags.getOrDefault(protocol, Protocol.UNKNOWN.name());
     }
 }

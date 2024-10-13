@@ -13,6 +13,10 @@ import java.util.stream.Stream;
  *   statement</a> to ensure any underlying file system resources are properly closed.
  */
 class CSVReader extends CSVGenerator {
+    static CSVReader FLOW_LOG = new CSVReader(Constants.FLOW_LOG_PATH);
+    static CSVReader LOOKUP_TABLE = new CSVReader(Constants.LOOKUP_TABLE_PATH);
+    static CSVReader IANA_PROTOCOLS = new CSVReader(Constants.IANA_PROTOCOLS_PATH);
+
     private final Path path;
     private final boolean hasHeaders;
 
