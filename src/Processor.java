@@ -5,6 +5,9 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+/**
+ * This class
+ */
 class Processor implements Runnable, Closeable {
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
@@ -23,6 +26,10 @@ class Processor implements Runnable, Closeable {
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
+
+    Processor(CSVGenerator flowLog, CSVSink output) {
+        this(flowLog, Tags.DEFAULT, output);
+    }
 
     Processor(CSVGenerator flowLog, Map<Protocol, String> tags, CSVSink output) {
         this.flowLog = flowLog;
