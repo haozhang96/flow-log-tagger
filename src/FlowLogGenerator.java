@@ -47,7 +47,7 @@ class FlowLogGenerator extends CSVGenerator {
     }
 
     private static String interfaceID() {
-        return "eni-" + Integer.toHexString(ThreadLocalRandom.current().nextInt());
+        return "eni-" + Integer.toHexString(ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE));
     }
 
     private static String sourceAddress() {
@@ -81,11 +81,11 @@ class FlowLogGenerator extends CSVGenerator {
     }
 
     private static String packets() {
-        return String.valueOf(2L);
+        return String.valueOf(ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
     }
 
     private static String bytes() {
-        return String.valueOf(2L);
+        return String.valueOf(ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
     }
 
     private static String start() {

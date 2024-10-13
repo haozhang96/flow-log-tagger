@@ -43,13 +43,6 @@ abstract class CSVSink implements Consumer<Iterable<String[]>>, Closeable {
         accept(Arrays.asList(rows));
     }
 
-    /**
-     * Append a new line.
-     */
-    public void newLine() {
-        row();
-    }
-
     //==================================================================================================================
     // Consumer Implementation Methods
     //==================================================================================================================

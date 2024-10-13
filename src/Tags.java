@@ -1,6 +1,7 @@
 import java.io.Serial;
 import java.util.Collections;
 import java.util.Map;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -8,7 +9,7 @@ import java.util.stream.Collectors;
  *   tags.
  * <br/><br/>
  *
- * An example of a lookup table is as follows:
+ * An example of the CSV file is as follows:
  * {@snippet lang="csv":
  *   dstport,protocol,tag
  *   25,tcp,sv_P1
@@ -25,25 +26,24 @@ import java.util.stream.Collectors;
  * }
  */
 class Tags extends CSVMap<Protocol, String> {
+    private static final @Serial long serialVersionUID = 1L;
+    private static final int PORT = 0;
+    private static final int PROTOCOL = 1;
+    private static final int TAG = 2;
+    private static final Collector<String[], ?, Map<Protocol, String>> COLLECTOR =
+        Collectors.toMap(columns -> new Protocol(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG]);
+
     /**
      * A read-only view of the default {@link Tags}
      */
     static Map<Protocol, String> DEFAULT =
         Collections.unmodifiableMap(new Tags(new CSVFileReader(Constants.LOOKUP_TABLE_PATH)));
 
-    private static final @Serial long serialVersionUID = 1L;
-    private static final int PORT = 0;
-    private static final int PROTOCOL = 1;
-    private static final int TAG = 2;
-
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
     Tags(CSVGenerator csv) {
-        super(
-            csv,
-            Collectors.toMap(columns -> new Protocol(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG])
-        );
+        super(csv, COLLECTOR);
     }
 }

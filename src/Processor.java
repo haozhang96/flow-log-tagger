@@ -69,7 +69,7 @@ class Processor implements Runnable, Closeable {
         output.row("Tag Counts:");
         output.row("Tag", "Count");
         tags.forEach(this::writeTag);
-        output.newLine();
+        output.row();
     }
 
     private void writeTag(String tag, long count) {
@@ -80,7 +80,7 @@ class Processor implements Runnable, Closeable {
         output.row("Port/Protocol Combination Counts:");
         output.row("Port", "Protocol", "Count");
         combinations.forEach(this::writeCombination);
-        output.newLine();
+        output.row();
     }
 
     private void writeCombination(Protocol protocol, long count) {
@@ -88,8 +88,9 @@ class Processor implements Runnable, Closeable {
     }
 
     private Protocol toProtocol(String[] columns) {
-        final var name = IANAProtocols.DEFAULT.getOrDefault(columns[PROTOCOL], Protocol.UNKNOWN).name();
-        return new Protocol(columns[DESTINATION_PORT], name);
+        final var ianaProtocol =
+            IANAProtocols.DEFAULT.getOrDefault(Integer.parseInt(columns[PROTOCOL]), Protocol.UNKNOWN);
+        return new Protocol(columns[DESTINATION_PORT], ianaProtocol.name());
     }
 
     private String getTag(Protocol protocol) {

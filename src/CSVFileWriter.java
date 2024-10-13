@@ -40,8 +40,7 @@ class CSVFileWriter extends CSVSink implements Flushable {
     @Override
     public void row(String... columns) {
         try {
-            writer.write(String.join(Constants.COMMA, columns));
-            writer.newLine();
+            writer.write(String.join(Constants.COMMA, columns) + System.lineSeparator());
         } catch (IOException exception) {
             throw new UncheckedIOException("Failed to write CSV to " + path, exception);
         }
