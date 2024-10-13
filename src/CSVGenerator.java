@@ -4,7 +4,7 @@ import java.util.stream.Stream;
 /**
  * This class generates a CSV (comma-separated values) file lazily into a {@link Stream} of columns as string arrays.
  */
-class CSVGenerator implements Supplier<Stream<String[]>> {
+abstract class CSVGenerator implements Supplier<Stream<String[]>> {
     private final long rows;
     private final Supplier<String>[] columnGenerators;
 

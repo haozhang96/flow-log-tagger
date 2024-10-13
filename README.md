@@ -29,6 +29,7 @@ For all cases, inspect the `data/output.csv` file for the results.
 ## Assumptions
 * The column orders of the CSV files are constant.
 * The flow log, lookup table, and IANA protocols CSV files are all well-formed and have a header row.
+* Only the default v2 flow log is supported.
 
 ## Samples
 flow_log.csv

@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * This class defines a protocol with a port number and a name.
@@ -15,7 +16,7 @@ record Protocol(int port, String name) {
     /**
      * A placeholder for an unknown protocol
      */
-    static final Protocol UNKNOWN = new Protocol(Integer.MIN_VALUE, Constants.UNKNOWN);
+    static final Protocol UNKNOWN = new Protocol(0, Constants.UNKNOWN);
 
     //==================================================================================================================
     // Constructors
@@ -27,6 +28,6 @@ record Protocol(int port, String name) {
 
     Protocol(int port, String name) {
         this.name = name.strip().toLowerCase();
-        this.port = port;
+        this.port = Objects.checkIndex(port, 1 << 16);
     }
 }

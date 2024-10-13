@@ -12,11 +12,7 @@ import java.util.stream.Stream;
  *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
  *   statement</a> to ensure any underlying file system resources are properly closed.
  */
-class CSVReader extends CSVGenerator {
-    static CSVReader FLOW_LOG = new CSVReader(Constants.FLOW_LOG_PATH);
-    static CSVReader LOOKUP_TABLE = new CSVReader(Constants.LOOKUP_TABLE_PATH);
-    static CSVReader IANA_PROTOCOLS = new CSVReader(Constants.IANA_PROTOCOLS_PATH);
-
+class CSVFileReader extends CSVGenerator {
     private final Path path;
     private final boolean hasHeaders;
 
@@ -24,11 +20,11 @@ class CSVReader extends CSVGenerator {
     // Constructors
     //==================================================================================================================
 
-    CSVReader(Path path) {
+    CSVFileReader(Path path) {
         this(path, true);
     }
 
-    CSVReader(Path path, boolean hasHeaders) {
+    CSVFileReader(Path path, boolean hasHeaders) {
         this.path = path;
         this.hasHeaders = hasHeaders;
     }
@@ -46,7 +42,7 @@ class CSVReader extends CSVGenerator {
                 .skip(hasHeaders ? 1L : 0L) // Skip the header.
                 .map(line -> line.strip().split(Constants.COMMA));
         } catch (IOException exception) {
-            throw new UncheckedIOException(exception);
+            throw new UncheckedIOException("Failed to read CSV from " + path, exception);
         }
     }
 }

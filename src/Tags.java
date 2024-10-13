@@ -25,7 +25,11 @@ import java.util.stream.Collectors;
  * }
  */
 class Tags extends CSVMap<Protocol, String> {
-    static Map<Protocol, String> DEFAULT = Collections.unmodifiableMap(new Tags(CSVReader.LOOKUP_TABLE));
+    /**
+     * A read-only view of the default {@link Tags}
+     */
+    static Map<Protocol, String> DEFAULT =
+        Collections.unmodifiableMap(new Tags(new CSVFileReader(Constants.LOOKUP_TABLE_PATH)));
 
     private static final @Serial long serialVersionUID = 1L;
     private static final int PORT = 0;
@@ -36,9 +40,9 @@ class Tags extends CSVMap<Protocol, String> {
     // Constructors
     //==================================================================================================================
 
-    Tags(CSVReader reader) {
+    Tags(CSVGenerator csv) {
         super(
-            reader,
+            csv,
             Collectors.toMap(columns -> new Protocol(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG])
         );
     }

@@ -12,7 +12,11 @@ import java.util.stream.Collectors;
  *
  */
 class IANAProtocols extends CSVMap<String, Protocol> {
-    static Map<String, Protocol> DEFAULT = Collections.unmodifiableMap(new IANAProtocols(CSVReader.IANA_PROTOCOLS));
+    /**
+     * A read-only view of the default {@link IANAProtocols}
+     */
+    static Map<String, Protocol> DEFAULT =
+        Collections.unmodifiableMap(new IANAProtocols(new CSVFileReader(Constants.IANA_PROTOCOLS_PATH)));
 
     private static final @Serial long serialVersionUID = 1L;
     private static final int DECIMAL = 0;
@@ -22,9 +26,9 @@ class IANAProtocols extends CSVMap<String, Protocol> {
     // Constructors
     //==================================================================================================================
 
-    IANAProtocols(CSVReader reader) {
+    IANAProtocols(CSVGenerator csv) {
         super(
-            reader,
+            csv,
             rows -> rows.filter(IANAProtocols::isNumeric),
             Collectors.toMap(columns -> columns[DECIMAL], columns -> new Protocol(columns[DECIMAL], columns[KEYWORD]))
         );

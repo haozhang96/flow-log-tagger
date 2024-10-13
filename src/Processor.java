@@ -1,21 +1,32 @@
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class Processor implements Runnable {
+class Processor implements Runnable, Closeable {
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
 
     private final CSVGenerator flowLog;
     private final Map<Protocol, String> tags;
-    private final CSVWriter output;
+    private final CSVSink input = Settings.DEBUG ? new CSVFileWriter(Constants.INPUT_PATH) : CSVSink.NOOP;
+    private final CSVSink output;
+
+    private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> collector =
+        Collectors.teeing(
+            Collectors.groupingBy(this::getTag, Collectors.counting()),
+            Collectors.groupingBy(Function.identity(), Collectors.counting()),
+            Map::entry // We're simply using this as a pair/2-tuple. This becomes infeasible with more data points.
+        );
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    Processor(CSVGenerator flowLog, Map<Protocol, String> tags, CSVWriter output) {
+    Processor(CSVGenerator flowLog, Map<Protocol, String> tags, CSVSink output) {
         this.flowLog = flowLog;
         this.tags = tags;
         this.output = output;
@@ -36,46 +47,49 @@ class Processor implements Runnable {
     }
 
     //==================================================================================================================
+    // AutoCloseable Implementation Methods
+    //==================================================================================================================
+
+    @Override
+    public void close() throws IOException {
+        output.close();
+    }
+
+    //==================================================================================================================
     // Private Helper Methods
     //==================================================================================================================
 
     private void process(Stream<String[]> rows) {
-        final var input = new CSVWriter(Constants.INPUT_PATH);
         final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
-            rows
-                .parallel()
-                .peek(input::columns) // Write the input data to a file for inspection later.
+            (Settings.PARALLEL ? rows.parallel() : rows.sequential())
+                .peek(input::row) // Write the input data to a file for debugging.
                 .map(this::toProtocol)
-                .collect(Collectors.teeing(
-                    Collectors.groupingBy(this::getTag, Collectors.counting()),
-                    Collectors.groupingBy(Function.identity(), Collectors.counting()),
-                    Map::entry // We're simply using this as a pair/2-tuple.
-                ));
+                .collect(collector);
 
         writeTags(counts.getKey());
-        output.newline();
+        output.newLine();
         writeCombinations(counts.getValue());
-        output.newline();
+        output.newLine();
     }
 
     private void writeTags(Map<String, Long> tags) {
-        output.columns("Tag Counts:");
-        output.columns("Tag", "Count");
+        output.row("Tag Counts:");
+        output.row("Tag", "Count");
         tags.forEach(this::writeTag);
     }
 
     private void writeTag(String tag, long count) {
-        output.columns(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, String.valueOf(count));
+        output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, String.valueOf(count));
     }
 
     private void writeCombinations(Map<Protocol, Long> combinations) {
-        output.columns("Port/Protocol Combination Counts:");
-        output.columns("Port", "Protocol", "Count");
+        output.row("Port/Protocol Combination Counts:");
+        output.row("Port", "Protocol", "Count");
         combinations.forEach(this::writeCombination);
     }
 
     private void writeCombination(Protocol protocol, long count) {
-        output.columns(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
+        output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
     }
 
     private Protocol toProtocol(String[] columns) {

@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class Main {
@@ -5,10 +6,13 @@ public class Main {
     // Bootstrap
     //==================================================================================================================
 
-    public static void main(String[] args) {
-        final var flowLog = args.length > 0 ? new CSVReader(Path.of(args[0])) : CSVReader.FLOW_LOG;
-        final var tags = args.length > 1 ? new Tags(new CSVReader(Path.of(args[1]))) : Tags.DEFAULT;
-        final var output = args.length > 2 ? new CSVWriter(Path.of(args[2])) : CSVWriter.OUTPUT;
-        new Processor(flowLog, tags, output).run();
+    public static void main(String[] args) throws IOException {
+        final var flowLog = new CSVFileReader(args.length > 0 ? Path.of(args[0]) : Constants.FLOW_LOG_PATH);
+        final var tags = args.length > 1 ? new Tags(new CSVFileReader(Path.of(args[1]))) : Tags.DEFAULT;
+        final var output = new CSVFileWriter(args.length > 2 ? Path.of(args[2]) : Constants.OUTPUT_PATH);
+
+        try (var processor = new Processor(flowLog, tags, output)) {
+            processor.run();
+        }
     }
 }
