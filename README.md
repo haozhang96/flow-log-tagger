@@ -14,19 +14,21 @@ To run the program using the included sample data, run the following command:
 java -cp out Main
 ```
 
-To run the program using the included sample data, run the following command:
+To run the program using your own data, run the following command:
 ```
 java -cp out Main <path to flow log CSV> <path to lookup table CSV> <path to output CSV>
 ```
 
-To run the program using randomly generated data that simulates a (roughly) 10 MB flow log file, run the following command:
+To run the program using randomly generated data that simulates a (roughly) 10 MB flow log file, run the following
+command:
 ```
 java -cp out Test
 ```
 
-To run the program using randomly generated data that simulates a flow log file with `N` rows, run the following command:
+To run the program using randomly generated data that simulates a flow log file with `N` rows, run the following
+command:
 ```
-java -cp out Test <row count>
+java -cp out Test <N row count>
 ```
 
 In all cases, inspect the `data/output.csv` file for the program's output results.
