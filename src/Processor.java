@@ -45,11 +45,8 @@ class Processor implements Runnable, Closeable {
                     .peek(input::row) // Potentially write the input data to a file for debugging purposes.
                     .map(this::toProtocol)
                     .collect(countingCollector);
-
             writeTags(counts.getKey());
-            output.newLine();
             writeCombinations(counts.getValue());
-            output.newLine();
         } finally {
             System.out.format("Processed in %d ms%n", System.currentTimeMillis() - started);
         }
@@ -72,6 +69,7 @@ class Processor implements Runnable, Closeable {
         output.row("Tag Counts:");
         output.row("Tag", "Count");
         tags.forEach(this::writeTag);
+        output.newLine();
     }
 
     private void writeTag(String tag, long count) {
@@ -82,6 +80,7 @@ class Processor implements Runnable, Closeable {
         output.row("Port/Protocol Combination Counts:");
         output.row("Port", "Protocol", "Count");
         combinations.forEach(this::writeCombination);
+        output.newLine();
     }
 
     private void writeCombination(Protocol protocol, long count) {
