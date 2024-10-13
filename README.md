@@ -19,19 +19,29 @@ To run the program using the included sample data, run the following command:
 java -cp out Main <path to flow log CSV> <path to lookup table CSV> <path to output CSV>
 ```
 
-To run the program using randomly generated data that simulates a 10 MB flow log file, run the following command:
+To run the program using randomly generated data that simulates a (roughly) 10 MB flow log file, run the following command:
 ```
 java -cp out Test
 ```
 
-For all cases, inspect the `data/output.csv` file for the results.
+To run the program using randomly generated data that simulates a flow log file with `N` rows, run the following command:
+```
+java -cp out Test <row count>
+```
+
+In all cases, inspect the `data/output.csv` file for the program's output results.
 
 ## Assumptions
 * The column orders of the CSV files are constant.
 * The flow log, lookup table, and IANA protocols CSV files are all well-formed and have a header row.
 * Only the default v2 flow log is supported.
 
-## Samples
+## Considerations
+* Parallel processing is used where possible.
+* Data streaming is used for memory constraints where possible.
+* Hash-based comparisons were used for performant lookups where possible.
+
+## Example
 flow_log.csv
 ```
 version,account-id,interface-id,srcaddr,dstaddr,srcport,dstport,protocol,packets,bytes,start,end,action,log-status
