@@ -14,7 +14,7 @@ import java.util.Objects;
  */
 record Protocol(int port, String name) {
     /**
-     * A placeholder for an unknown protocol
+     * A sentinel value for an unknown protocol
      */
     static final Protocol UNKNOWN = new Protocol(0, Constants.UNKNOWN);
 
@@ -28,6 +28,6 @@ record Protocol(int port, String name) {
 
     Protocol(int port, String name) {
         this.name = name.strip().toLowerCase();
-        this.port = Objects.checkIndex(port, 1 << 16);
+        this.port = Objects.checkIndex(port, 1 << 16); // Range of [0, 2^16)
     }
 }
