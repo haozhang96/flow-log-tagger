@@ -57,7 +57,7 @@ abstract class CSVSink implements Consumer<Iterable<String[]>>, Closeable {
     @Override
     public void accept(Iterable<String[]> rows) {
         StreamSupport
-            .stream(rows.spliterator(), Settings.PARALLEL)
+            .stream(rows.spliterator(), true)
             .forEach(this::row);
     }
 

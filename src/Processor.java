@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class Processor implements Runnable, Closeable {
     private static final int DESTINATION_PORT = 6;
@@ -14,11 +13,10 @@ class Processor implements Runnable, Closeable {
     private final Map<Protocol, String> tags;
     private final CSVSink input = Settings.DEBUG ? new CSVFileWriter(Constants.INPUT_PATH) : CSVSink.NOOP;
     private final CSVSink output;
-
-    private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> collector =
+    private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> countingCollector =
         Collectors.teeing(
-            Collectors.groupingBy(this::getTag, Collectors.counting()),
-            Collectors.groupingBy(Function.identity(), Collectors.counting()),
+            Collectors.groupingByConcurrent(this::getTag, Collectors.counting()),
+            Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()),
             Map::entry // We're simply using this as a pair/2-tuple. This becomes infeasible with more data points.
         );
 
@@ -39,8 +37,19 @@ class Processor implements Runnable, Closeable {
     @Override
     public void run() {
         final long started = System.currentTimeMillis();
+
         try (var rows = flowLog.get()) {
-            process(rows);
+            final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
+                rows
+                    .parallel()
+                    .peek(input::row) // Potentially write the input data to a file for debugging purposes.
+                    .map(this::toProtocol)
+                    .collect(countingCollector);
+
+            writeTags(counts.getKey());
+            output.newLine();
+            writeCombinations(counts.getValue());
+            output.newLine();
         } finally {
             System.out.format("Processed in %d ms%n", System.currentTimeMillis() - started);
         }
@@ -58,19 +67,6 @@ class Processor implements Runnable, Closeable {
     //==================================================================================================================
     // Private Helper Methods
     //==================================================================================================================
-
-    private void process(Stream<String[]> rows) {
-        final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
-            (Settings.PARALLEL ? rows.parallel() : rows.sequential())
-                .peek(input::row) // Write the input data to a file for debugging.
-                .map(this::toProtocol)
-                .collect(collector);
-
-        writeTags(counts.getKey());
-        output.newLine();
-        writeCombinations(counts.getValue());
-        output.newLine();
-    }
 
     private void writeTags(Map<String, Long> tags) {
         output.row("Tag Counts:");

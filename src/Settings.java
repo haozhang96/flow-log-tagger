@@ -3,14 +3,5 @@
  *   a state beyond its lifetime.
  */
 interface Settings {
-    boolean DEBUG = isEnabled("debug");
-    boolean PARALLEL = isEnabled("parallel");
-
-    //==================================================================================================================
-    // Private Helper Methods
-    //==================================================================================================================
-
-    private static boolean isEnabled(String property) {
-        return !Boolean.toString(false).equalsIgnoreCase(System.getProperty(property)); // True-by-default semantic
-    }
+    boolean DEBUG = Boolean.getBoolean("debug");
 }
