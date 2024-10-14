@@ -1,4 +1,5 @@
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
@@ -18,7 +19,7 @@ abstract class CSVSink implements Consumer<Iterable<String[]>>, Closeable {
     static final CSVSink NOOP =
         new CSVSink() {
             @Override
-            public void row(String... columns) {
+            void row(String... columns) {
                 // Do nothing.
             }
         };
@@ -32,14 +33,14 @@ abstract class CSVSink implements Consumer<Iterable<String[]>>, Closeable {
      *
      * @param columns The values for the columns to append to the new row
      */
-    public abstract void row(String... columns);
+    abstract void row(String... columns);
 
     /**
      * Append a given list of rows of column values.
      *
      * @param rows The new rows of column values to append
      */
-    public void rows(String[]... rows) {
+    void rows(String[]... rows) {
         accept(Arrays.asList(rows));
     }
 

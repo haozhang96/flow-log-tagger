@@ -1,4 +1,7 @@
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.Flushable;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -38,7 +41,7 @@ class CSVFileWriter extends CSVSink implements Flushable {
     //==================================================================================================================
 
     @Override
-    public void row(String... columns) {
+    void row(String... columns) {
         try {
             writer.write(String.join(Constants.COMMA, columns) + System.lineSeparator());
         } catch (IOException exception) {

@@ -1,6 +1,4 @@
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /**
  * This class is a {@link CSVGenerator} that generates a flow log with a defined number of rows using randomly generated
