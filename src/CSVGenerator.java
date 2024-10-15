@@ -2,9 +2,9 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * This class generates a CSV (comma-separated values) file lazily into a {@link Stream} of columns as string arrays.
+ * This class generates CSV (comma-separated values) data lazily into a {@link Stream} of columns as string arrays.
  */
-abstract class CSVGenerator implements Supplier<Stream<String[]>> {
+class CSVGenerator implements CSVSupplier {
     private final long rows;
     private final Supplier<String>[] columnGenerators;
 
@@ -32,6 +32,7 @@ abstract class CSVGenerator implements Supplier<Stream<String[]>> {
         return Stream
             .generate(() -> columnGenerators)
             .limit(rows)
-            .map(columnGenerators -> Stream.of(columnGenerators).map(Supplier::get).toArray(String[]::new));
+            .map(Stream::of)
+            .map(columnGenerators -> columnGenerators.map(Supplier::get).toArray(String[]::new));
     }
 }

@@ -1,5 +1,7 @@
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -9,13 +11,14 @@ import java.util.stream.Collectors;
  * This class calculates certain statistics for a flow log based on mappings of its {@link Protocol}s to {@link Tags}.
  */
 class Processor implements Runnable, Closeable {
+    private static final MemoryMXBean MEMORY = ManagementFactory.getMemoryMXBean();
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
 
-    private final CSVGenerator flowLog;
+    private final CSVSupplier flowLog;
     private final Map<Protocol, String> tags;
-    private final CSVSink input = Settings.DEBUG ? new CSVFileWriter(Constants.INPUT_PATH) : CSVSink.NOOP;
-    private final CSVSink output;
+    private final CSVConsumer input = Settings.DEBUG ? new CSVFileWriter(Constants.INPUT_PATH) : CSVConsumer.NOOP;
+    private final CSVConsumer output;
     private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> countingCollector =
         Collectors.teeing(
             Collectors.groupingByConcurrent(this::getTag, Collectors.counting()),
@@ -27,11 +30,11 @@ class Processor implements Runnable, Closeable {
     // Constructors
     //==================================================================================================================
 
-    Processor(CSVGenerator flowLog, CSVSink output) {
+    Processor(CSVSupplier flowLog, CSVConsumer output) {
         this(flowLog, Tags.DEFAULT, output);
     }
 
-    Processor(CSVGenerator flowLog, Map<Protocol, String> tags, CSVSink output) {
+    Processor(CSVSupplier flowLog, Map<Protocol, String> tags, CSVConsumer output) {
         this.flowLog = flowLog;
         this.tags = tags;
         this.output = output;
@@ -43,19 +46,25 @@ class Processor implements Runnable, Closeable {
 
     @Override
     public void run() {
-        final long started = System.currentTimeMillis();
+        final var startTime = System.currentTimeMillis();
+        final var startMemory = MEMORY.getHeapMemoryUsage().getUsed();
 
         try (var rows = flowLog.get()) {
             final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
                 rows
                     .parallel()
+                    .unordered()
                     .peek(input::row) // Potentially write the input data to a file for debugging purposes.
                     .map(this::toProtocol)
                     .collect(countingCollector);
             writeTags(counts.getKey());
             writeCombinations(counts.getValue());
         } finally {
-            System.out.format("Processed in %d ms%n", System.currentTimeMillis() - started);
+            System.out.format(
+                "Processed in %d ms using %.2f MB of heap memory (may be inaccurate due to garbage collection)%n",
+                System.currentTimeMillis() - startTime,
+                (MEMORY.getHeapMemoryUsage().getUsed() - startMemory) / 1_000_000D
+            );
         }
     }
 
@@ -65,6 +74,7 @@ class Processor implements Runnable, Closeable {
 
     @Override
     public void close() throws IOException {
+        input.close();
         output.close();
     }
 

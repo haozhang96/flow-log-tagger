@@ -43,14 +43,14 @@ class IANAProtocols extends CSVMap<Integer, Protocol> {
     /**
      * A read-only view of the default {@link IANAProtocols}
      */
-    static Map<Integer, Protocol> DEFAULT =
+    static final Map<Integer, Protocol> DEFAULT =
         Collections.unmodifiableMap(new IANAProtocols(new CSVFileReader(Constants.IANA_PROTOCOLS_PATH)));
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    IANAProtocols(CSVGenerator csv) {
+    IANAProtocols(CSVSupplier csv) {
         super(csv, FILTER, COLLECTOR);
     }
 }

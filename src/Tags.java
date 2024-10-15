@@ -36,14 +36,14 @@ class Tags extends CSVMap<Protocol, String> {
     /**
      * A read-only view of the default {@link Tags}
      */
-    static Map<Protocol, String> DEFAULT =
+    static final Map<Protocol, String> DEFAULT =
         Collections.unmodifiableMap(new Tags(new CSVFileReader(Constants.LOOKUP_TABLE_PATH)));
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    Tags(CSVGenerator csv) {
+    Tags(CSVSupplier csv) {
         super(csv, COLLECTOR);
     }
 }

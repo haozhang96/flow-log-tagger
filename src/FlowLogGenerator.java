@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
  *   data, and is mainly used for testing.
  */
 class FlowLogGenerator extends CSVGenerator {
+    private static final String VERSION = String.valueOf(2L);
     private static final int[] PORTS = {23, 25, 80, 110, 143, 443, 993, 1024, 1030, 49152, 49153, 49154, 49321, 56000};
     private static final int[] PROTOCOLS = {1, 4, 6, 12, 17, 27, 41, 58, 115, 143};
 
@@ -37,7 +38,7 @@ class FlowLogGenerator extends CSVGenerator {
     //==================================================================================================================
 
     private static String version() {
-        return String.valueOf(2L);
+        return VERSION;
     }
 
     private static String accountID() {

@@ -15,7 +15,7 @@ import java.nio.file.StandardOpenOption;
  *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
  *   statement</a> to ensure any underlying file system resources are properly closed.
  */
-class CSVFileWriter extends CSVSink implements Flushable {
+class CSVFileWriter implements CSVConsumer, Flushable {
     private final Path path;
     private final BufferedWriter writer;
 
@@ -37,15 +37,17 @@ class CSVFileWriter extends CSVSink implements Flushable {
     }
 
     //==================================================================================================================
-    // CSVSink Implementation Methods
+    // CSVConsumer Implementation Methods
     //==================================================================================================================
 
     @Override
-    void row(String... columns) {
-        try {
-            writer.write(String.join(Constants.COMMA, columns) + System.lineSeparator());
-        } catch (IOException exception) {
-            throw new UncheckedIOException("Failed to write CSV to " + path, exception);
+    public void accept(Iterable<String[]> rows) {
+        for (final var columns : rows) {
+            try {
+                writer.write(String.join(Constants.COMMA, columns) + System.lineSeparator());
+            } catch (IOException exception) {
+                throw new UncheckedIOException("Failed to write CSV to " + path, exception);
+            }
         }
     }
 
@@ -64,10 +66,6 @@ class CSVFileWriter extends CSVSink implements Flushable {
 
     @Override
     public void close() throws IOException {
-        try {
-            writer.close();
-        } finally {
-            super.close();
-        }
+        writer.close();
     }
 }

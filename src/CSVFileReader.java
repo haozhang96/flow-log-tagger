@@ -12,7 +12,7 @@ import java.util.stream.Stream;
  *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
  *   statement</a> to ensure any underlying file system resources are properly closed.
  */
-class CSVFileReader extends CSVGenerator {
+class CSVFileReader implements CSVSupplier {
     private final Path path;
     private final boolean hasHeaders;
 
