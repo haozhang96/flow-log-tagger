@@ -64,10 +64,10 @@ class FlowLogProcessor implements Runnable, Closeable {
             writeCombinations(counts.getValue());
         } finally {
             System.out.format(
-                "Processed %d rows (approximately %.2f MiB) in %d ms%n",
+                "Processed %d rows (approximately %.2f MiB) in %.4f seconds%n",
                 rowCount.get(),
                 (double) rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / Constants.MEBIBYTE_SCALE,
-                System.currentTimeMillis() - startTime
+                (double) (System.currentTimeMillis() - startTime) / 1000L
             );
         }
     }
