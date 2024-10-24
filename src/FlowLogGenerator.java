@@ -49,7 +49,7 @@ class FlowLogGenerator extends TableGenerator {
      * @param b The number of bytes of the simulated flow log file to construct the {@link FlowLogGenerator} for
      */
     static FlowLogGenerator ofBytes(long b) {
-        return new FlowLogGenerator(b * Constants.FLOW_LOG_RECORD_SIZE);
+        return new FlowLogGenerator(b / Constants.FLOW_LOG_RECORD_SIZE);
     }
 
     /**

@@ -2,6 +2,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
  * This class calculates certain statistics for a flow log based on mappings of its {@link Protocol}s to {@link Tags}.
  */
 class FlowLogProcessor implements Runnable, Closeable {
+    private static final AtomicBoolean WARMED_UP = new AtomicBoolean();
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
 
@@ -46,10 +48,12 @@ class FlowLogProcessor implements Runnable, Closeable {
 
     @Override
     public void run() {
+        warmUp();
+
         final var startTime = System.currentTimeMillis();
         final var rowCount = new AtomicLong();
         final Consumer<String[]> rowCounter = ignored -> rowCount.incrementAndGet();
-        System.out.println("Processing flow log");
+        System.out.format("Processing %s...%n", input);
 
         try (var rows = input.get()) {
             final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
@@ -64,9 +68,9 @@ class FlowLogProcessor implements Runnable, Closeable {
             writeCombinations(counts.getValue());
         } finally {
             System.out.format(
-                "Processed %d rows (approximately %.2f MiB) in %.4f seconds%n",
+                "Processed %d rows / ~%.2f MiB in %.4f seconds%n",
                 rowCount.get(),
-                (double) rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / Constants.MEBIBYTE_SCALE,
+                rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE,
                 (double) (System.currentTimeMillis() - startTime) / 1000L
             );
         }
@@ -109,5 +113,16 @@ class FlowLogProcessor implements Runnable, Closeable {
 
     private String getTag(Protocol protocol) {
         return tags.getOrDefault(protocol, Protocol.UNKNOWN.name());
+    }
+
+    private static void warmUp() {
+        if (WARMED_UP.compareAndSet(false, true)) {
+            try (var processor = new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1000L), TableConsumer.NOOP)) {
+                System.out.println("Warming up the Java virtual machine...");
+                processor.run();
+            } catch (IOException exception) {
+                // We don't care; this is only a warm-up.
+            }
+        }
     }
 }
