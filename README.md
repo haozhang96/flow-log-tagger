@@ -34,9 +34,10 @@ java -cp out Test <N MiB>
 In all cases, inspect the `data/output.csv` file for the program's output results.
 
 ## Assumptions
-* The column orders of the files are constant.
-* The flow log, lookup table, and IANA protocols files are all well-formed.
-* Only the [default v2 flow log](https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html) is supported.
+* The column orders of all the files are constant.
+* The flow log, lookup table, and IANA protocols files are all well-formed according to their file types.
+* Only header-less, space-delimited [v2 flow log](https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html)
+  files are supported.
 
 ## Considerations
 * This project was written for standalone compilation and execution on any system meeting the outlined requirements
