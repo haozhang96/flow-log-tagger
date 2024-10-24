@@ -6,8 +6,7 @@ import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
 
 /**
- * This interface defines an object that consumes CSV (comma-separated values) data from a {@link Iterable} of columns
- *   as string arrays.
+ * This interface defines an object that consumes tabular data from a {@link Iterable} of columns as string arrays.
  * <br/><br/>
  *
  * <b>Note:</b> Instances of this interface must be used with a
@@ -15,11 +14,11 @@ import java.util.stream.StreamSupport;
  *   statement</a> to ensure any underlying file system resources are properly closed.
  */
 @FunctionalInterface
-interface CSVConsumer extends Consumer<Iterable<String[]>>, Closeable {
+interface TableConsumer extends Consumer<Iterable<String[]>>, Closeable {
     /**
-     * A {@link CSVConsumer} that consumes no CSV data; mainly used for testing
+     * A {@link TableConsumer} that consumes no tabular data; mainly used for testing
      */
-    CSVConsumer NOOP = columns -> { };
+    TableConsumer NOOP = columns -> { };
 
     //==================================================================================================================
     // Implementation Methods

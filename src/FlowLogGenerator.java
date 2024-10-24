@@ -1,10 +1,10 @@
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * This class is a {@link CSVGenerator} that generates a flow log with a defined number of rows using randomly generated
+ * This class is a {@link TableGenerator} that generates a flow log with a defined number of rows using randomly generated
  *   data, and is mainly used for testing.
  */
-class FlowLogGenerator extends CSVGenerator {
+class FlowLogGenerator extends TableGenerator {
     private static final String VERSION = String.valueOf(2L);
     private static final int[] PORTS = {23, 25, 80, 110, 143, 443, 993, 1024, 1030, 49152, 49153, 49154, 49321, 56000};
     private static final int[] PROTOCOLS = {1, 4, 6, 12, 17, 27, 41, 58, 115, 143};
@@ -13,6 +13,11 @@ class FlowLogGenerator extends CSVGenerator {
     // Constructors
     //==================================================================================================================
 
+    /**
+     * Construct a {@link FlowLogGenerator} that generates a flow log with a given number of rows.
+     *
+     * @param rows The number of rows of the simulated flow log file to construct the {@link FlowLogGenerator} for
+     */
     FlowLogGenerator(long rows) {
         super(
             rows,
@@ -31,6 +36,30 @@ class FlowLogGenerator extends CSVGenerator {
             FlowLogGenerator::action,
             FlowLogGenerator::logStatus
         );
+    }
+
+    //==================================================================================================================
+    // Factory Methods
+    //==================================================================================================================
+
+    /**
+     * Construct a {@link FlowLogGenerator} that generates a flow log with a number of rows approximating a given file
+     *   size in bytes.
+     *
+     * @param b The number of bytes of the simulated flow log file to construct the {@link FlowLogGenerator} for
+     */
+    static FlowLogGenerator ofBytes(long b) {
+        return new FlowLogGenerator(b * Constants.FLOW_LOG_RECORD_SIZE);
+    }
+
+    /**
+     * Construct a {@link FlowLogGenerator} that generates a flow log with a number of rows approximating a given file
+     *   size in mebibytes.
+     *
+     * @param mib The number of mebibytes of the simulated flow log file to construct the {@link FlowLogGenerator} for
+     */
+    static FlowLogGenerator ofMebibytes(Number mib) {
+        return ofBytes(Math.round(mib.doubleValue() * Constants.MEBIBYTE_SCALE));
     }
 
     //==================================================================================================================

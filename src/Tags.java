@@ -1,11 +1,10 @@
 import java.io.Serial;
-import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
- * This class is a {@link CSVMap} of the lookup table mapping destination port and protocol combinations to their named
+ * This class is a {@link Table} of the lookup table mapping destination port and protocol combinations to their named
  *   tags.
  * <br/><br/>
  *
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
  *   143,tcp,email
  * }
  */
-class Tags extends CSVMap<Protocol, String> {
+class Tags extends Table<Protocol, String> {
     private static final @Serial long serialVersionUID = 1L;
     private static final int PORT = 0;
     private static final int PROTOCOL = 1;
@@ -33,17 +32,11 @@ class Tags extends CSVMap<Protocol, String> {
     private static final Collector<String[], ?, Map<Protocol, String>> COLLECTOR =
         Collectors.toMap(columns -> new Protocol(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG]);
 
-    /**
-     * A read-only view of the default {@link Tags}
-     */
-    static final Map<Protocol, String> DEFAULT =
-        Collections.unmodifiableMap(new Tags(new CSVFileReader(Constants.LOOKUP_TABLE_PATH)));
-
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    Tags(CSVSupplier csv) {
-        super(csv, COLLECTOR);
+    Tags(TableSupplier data) {
+        super(data, COLLECTOR);
     }
 }

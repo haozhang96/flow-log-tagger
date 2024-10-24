@@ -1,5 +1,4 @@
 import java.io.Serial;
-import java.util.Collections;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
@@ -7,7 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * This class is a {@link CSVMap} of IANA-assigned protocol numbers mapping from their unique decimal values to their
+ * This class is a {@link Table} of IANA-assigned protocol numbers mapping from their unique decimal values to their
  *   corresponding keywords.
  * <br/><br/>
  *
@@ -28,29 +27,20 @@ import java.util.stream.Stream;
  * @see <a href="https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml">IANA Protocol Numbers (Spec)</a>
  * @see <a href="https://www.iana.org/assignments/protocol-numbers/protocol-numbers-1.csv">IANA Protocol Numbers (CSV)</a>
  */
-class IANAProtocols extends CSVMap<Integer, Protocol> {
+class IANAProtocols extends Table<String, Protocol> {
     private static final @Serial long serialVersionUID = 1L;
     private static final int DECIMAL = 0;
     private static final int KEYWORD = 1;
-    private static final UnaryOperator<Stream<String[]>> FILTER =
+    private static final UnaryOperator<Stream<String[]>> MAPPER =
         rows -> rows.filter(columns -> columns[DECIMAL].codePoints().allMatch(Character::isDigit));
-    private static final Collector<String[], ?, Map<Integer, Protocol>> COLLECTOR =
-        Collectors.toMap(
-            columns -> Integer.parseInt(columns[DECIMAL]),
-            columns -> new Protocol(columns[DECIMAL], columns[KEYWORD])
-        );
-
-    /**
-     * A read-only view of the default {@link IANAProtocols}
-     */
-    static final Map<Integer, Protocol> DEFAULT =
-        Collections.unmodifiableMap(new IANAProtocols(new CSVFileReader(Constants.IANA_PROTOCOLS_PATH)));
+    private static final Collector<String[], ?, Map<String, Protocol>> COLLECTOR =
+        Collectors.toMap(columns -> columns[DECIMAL], columns -> new Protocol(columns[DECIMAL], columns[KEYWORD]));
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    IANAProtocols(CSVSupplier csv) {
-        super(csv, FILTER, COLLECTOR);
+    IANAProtocols(TableSupplier data) {
+        super(data, MAPPER, COLLECTOR);
     }
 }

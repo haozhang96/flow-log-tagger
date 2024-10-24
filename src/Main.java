@@ -7,11 +7,10 @@ public class Main {
     //==================================================================================================================
 
     public static void main(String[] args) throws IOException {
-        final var flowLog = new CSVFileReader(args.length > 0 ? Path.of(args[0]) : Constants.FLOW_LOG_PATH);
-        final var tags = args.length > 1 ? new Tags(new CSVFileReader(Path.of(args[1]))) : Tags.DEFAULT;
-        final var output = new CSVFileWriter(args.length > 2 ? Path.of(args[2]) : Constants.OUTPUT_PATH);
-
-        try (var processor = new Processor(flowLog, tags, output)) {
+        final var input = new TableFileReader(args.length > 0 ? Path.of(args[0]) : Constants.INPUT_PATH, false);
+        final var tags = args.length > 1 ? new TableFileReader(Path.of(args[1])).project(Tags::new) : Constants.TAGS;
+        final var output = new TableFileWriter(args.length > 2 ? Path.of(args[2]) : Constants.OUTPUT_PATH);
+        try (var processor = new FlowLogProcessor(input, tags, output)) {
             processor.run();
         }
     }

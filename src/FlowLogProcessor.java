@@ -1,8 +1,9 @@
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -10,15 +11,14 @@ import java.util.stream.Collectors;
 /**
  * This class calculates certain statistics for a flow log based on mappings of its {@link Protocol}s to {@link Tags}.
  */
-class Processor implements Runnable, Closeable {
-    private static final MemoryMXBean MEMORY = ManagementFactory.getMemoryMXBean();
+class FlowLogProcessor implements Runnable, Closeable {
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
 
-    private final CSVSupplier flowLog;
+    private final TableSupplier input;
     private final Map<Protocol, String> tags;
-    private final CSVConsumer input = Settings.DEBUG ? new CSVFileWriter(Constants.INPUT_PATH) : CSVConsumer.NOOP;
-    private final CSVConsumer output;
+    private final TableConsumer output;
+    private final TableConsumer debug = Settings.DEBUG ? new TableFileWriter(Constants.DEBUG_PATH) : TableConsumer.NOOP;
     private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> countingCollector =
         Collectors.teeing(
             Collectors.groupingByConcurrent(this::getTag, Collectors.counting()),
@@ -30,13 +30,13 @@ class Processor implements Runnable, Closeable {
     // Constructors
     //==================================================================================================================
 
-    Processor(CSVSupplier flowLog, CSVConsumer output) {
-        this(flowLog, Tags.DEFAULT, output);
+    FlowLogProcessor(TableSupplier input, TableConsumer output) {
+        this(input, null, output);
     }
 
-    Processor(CSVSupplier flowLog, Map<Protocol, String> tags, CSVConsumer output) {
-        this.flowLog = flowLog;
-        this.tags = tags;
+    FlowLogProcessor(TableSupplier input, Map<Protocol, String> tags, TableConsumer output) {
+        this.input = input;
+        this.tags = Objects.requireNonNullElse(tags, Constants.TAGS);
         this.output = output;
     }
 
@@ -47,23 +47,27 @@ class Processor implements Runnable, Closeable {
     @Override
     public void run() {
         final var startTime = System.currentTimeMillis();
-        final var startMemory = MEMORY.getHeapMemoryUsage().getUsed();
+        final var rowCount = new AtomicLong();
+        final Consumer<String[]> rowCounter = ignored -> rowCount.incrementAndGet();
+        System.out.println("Processing flow log");
 
-        try (var rows = flowLog.get()) {
+        try (var rows = input.get()) {
             final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
                 rows
                     .parallel()
                     .unordered()
-                    .peek(input::row) // Potentially write the input data to a file for debugging purposes.
+                    .peek(rowCounter.andThen(debug::row)) // Potentially write the input data to a file for debugging.
                     .map(this::toProtocol)
                     .collect(countingCollector);
             writeTags(counts.getKey());
+            output.row();
             writeCombinations(counts.getValue());
         } finally {
             System.out.format(
-                "Processed in %d ms using %.2f MB of heap memory (may be inaccurate due to garbage collection)%n",
-                System.currentTimeMillis() - startTime,
-                (MEMORY.getHeapMemoryUsage().getUsed() - startMemory) / 1_000_000D
+                "Processed %d rows (approximately %.2f MiB) in %d ms%n",
+                rowCount.get(),
+                (double) rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / Constants.MEBIBYTE_SCALE,
+                System.currentTimeMillis() - startTime
             );
         }
     }
@@ -74,8 +78,8 @@ class Processor implements Runnable, Closeable {
 
     @Override
     public void close() throws IOException {
-        input.close();
         output.close();
+        debug.close();
     }
 
     //==================================================================================================================
@@ -85,28 +89,21 @@ class Processor implements Runnable, Closeable {
     private void writeTags(Map<String, Long> tags) {
         output.row("Tag Counts:");
         output.row("Tag", "Count");
-        tags.forEach(this::writeTag);
-        output.row();
-    }
-
-    private void writeTag(String tag, long count) {
-        output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, String.valueOf(count));
+        tags.forEach((tag, count) ->
+            output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, String.valueOf(count))
+        );
     }
 
     private void writeCombinations(Map<Protocol, Long> combinations) {
         output.row("Port/Protocol Combination Counts:");
         output.row("Port", "Protocol", "Count");
-        combinations.forEach(this::writeCombination);
-        output.row();
-    }
-
-    private void writeCombination(Protocol protocol, long count) {
-        output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
+        combinations.forEach((protocol, count) ->
+            output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count))
+        );
     }
 
     private Protocol toProtocol(String[] columns) {
-        final var ianaProtocol =
-            IANAProtocols.DEFAULT.getOrDefault(Integer.parseInt(columns[PROTOCOL]), Protocol.UNKNOWN);
+        final var ianaProtocol = Constants.IANA_PROTOCOLS.getOrDefault(columns[PROTOCOL], Protocol.UNKNOWN);
         return new Protocol(columns[DESTINATION_PORT], ianaProtocol.name());
     }
 
