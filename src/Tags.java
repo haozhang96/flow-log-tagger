@@ -4,8 +4,8 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
- * This class is a {@link Table} of the lookup table mapping destination port and protocol combinations to their named
- *   tags.
+ * This class is a {@link TableMap} of the lookup table mapping destination port and protocol combinations to their
+ *   named tags.
  * <br/><br/>
  *
  * An example of the CSV file is as follows:
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  *   143,tcp,email
  * }
  */
-class Tags extends Table<Protocol, String> {
+class Tags extends TableMap<Protocol, String> {
     private static final @Serial long serialVersionUID = 1L;
     private static final int PORT = 0;
     private static final int PROTOCOL = 1;

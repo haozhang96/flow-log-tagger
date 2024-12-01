@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * This class is a {@link Table} of IANA-assigned protocol numbers mapping from their unique decimal values to their
+ * This class is a {@link TableMap} of IANA-assigned protocol numbers mapping from their unique decimal values to their
  *   corresponding keywords.
  * <br/><br/>
  *
@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  * @see <a href="https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml">IANA Protocol Numbers (Spec)</a>
  * @see <a href="https://www.iana.org/assignments/protocol-numbers/protocol-numbers-1.csv">IANA Protocol Numbers (CSV)</a>
  */
-class IANAProtocols extends Table<String, Protocol> {
+class IANAProtocols extends TableMap<String, Protocol> {
     private static final @Serial long serialVersionUID = 1L;
     private static final int DECIMAL = 0;
     private static final int KEYWORD = 1;

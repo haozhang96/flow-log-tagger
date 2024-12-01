@@ -1,5 +1,5 @@
 import java.util.Collections;
-import java.util.NavigableMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -8,7 +8,7 @@ import java.util.stream.Stream;
  * This interface defines an object that supplies tabular data lazily into a {@link Stream} of columns as string arrays.
  */
 @FunctionalInterface
-interface TableSupplier extends Supplier<Stream<String[]>> {
+interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
     /**
      * A {@link TableConsumer} that generates no tabular data; mainly used for testing
      */
@@ -19,20 +19,18 @@ interface TableSupplier extends Supplier<Stream<String[]>> {
     //==================================================================================================================
 
     /**
-     * Project the data of this {@link TableSupplier} onto a {@link Table} using its given
+     * Project the data of this {@link TableSupplier} onto a {@link TableMap} using its given
      *   {@link TableSupplier}-accepting constructor.
      *
-     * @param tableFactory The {@link TableSupplier}-accepting constructor of the {@link Table} to project this
+     * @param tableFactory The {@link TableSupplier}-accepting constructor of the {@link TableMap} to project this
      *                     {@link TableSupplier}'s data onto
-     * @param <K> The type of keys mapped by the constructed {@link Table}
-     * @param <V> The type of values mapped by the constructed {@link Table}
-     * @return An unmodifiable {@link NavigableMap} view of the constructed {@link Table} with the data of this
+     * @param <K> The type of keys mapped by the constructed {@link TableMap}
+     * @param <V> The type of values mapped by the constructed {@link TableMap}
+     * @return An unmodifiable {@link Map} view of the constructed {@link TableMap} with the data of this
      *         {@link TableSupplier} projected onto it
      */
-    default <K extends Comparable<? super K>, V> NavigableMap<K, V> project(
-        Function<? super TableSupplier, ? extends Table<K, V>> tableFactory
-    ) {
-        return Collections.unmodifiableNavigableMap(tableFactory.apply(this));
+    default <K, V> Map<K, V> project(Function<? super TableSupplier, ? extends TableMap<K, V>> tableFactory) {
+        return Collections.unmodifiableMap(tableFactory.apply(this));
     }
 
     //==================================================================================================================
@@ -44,4 +42,66 @@ interface TableSupplier extends Supplier<Stream<String[]>> {
      */
     @Override
     Stream<String[]> get();
+
+    //==================================================================================================================
+    // Iterable Implementation Methods
+    //==================================================================================================================
+
+    /**
+     * Retrieve an {@link Iterator} of the tabular data as string column arrays.
+     */
+    @Override
+    default Iterator iterator() {
+        return new Iterator(this);
+    }
+
+    //==================================================================================================================
+    // Iterator Support
+    //==================================================================================================================
+
+    /**
+     * This class is an {@link java.util.Iterator Iterator} that wraps around a {@link TableSupplier}'s
+     *   {@linkplain TableSupplier#get() Stream}s to allow them to be used with a
+     *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
+     *   statement</a> to ensure any underlying resources are properly closed.
+     */
+    class Iterator implements java.util.Iterator<String[]>, AutoCloseable {
+        private final Stream<String[]> data;
+        private final java.util.Iterator<String[]> iterator;
+
+        //==============================================================================================================
+        // Constructors
+        //==============================================================================================================
+
+        Iterator(TableSupplier table) {
+            iterator = (data = table.get()).iterator();
+        }
+
+        //==============================================================================================================
+        // Iterator Implementation Methods
+        //==============================================================================================================
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public String[] next() {
+            try (this) {
+                return iterator.next();
+            }
+        }
+
+        //==============================================================================================================
+        // AutoCloseable Implementation Methods
+        //==============================================================================================================
+
+        @Override
+        public void close() {
+            if (!hasNext()) {
+                data.close();
+            }
+        }
+    }
 }
