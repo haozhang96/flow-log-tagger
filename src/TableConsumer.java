@@ -31,6 +31,16 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @param columns The values for the columns to append to the new row
      * @return The same {@link TableConsumer} for chaining
      */
+    default TableConsumer row(Object... columns) {
+        return columns != null ? rows(toString(columns)) : row();
+    }
+
+    /**
+     * Append a new row with a given list of column values.
+     *
+     * @param columns The values for the columns to append to the new row
+     * @return The same {@link TableConsumer} for chaining
+     */
     default TableConsumer row(String... columns) {
         return rows(columns);
     }
@@ -47,6 +57,16 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
             case null -> rows(); // Append an empty row.
             default -> rows(StreamSupport.stream(columns.spliterator(), false).toArray(String[]::new));
         };
+    }
+
+    /**
+     * Append a given list of rows of column values.
+     *
+     * @param rows The new rows of column values to append
+     * @return The same {@link TableConsumer} for chaining
+     */
+    default TableConsumer rows(Object[]... rows) {
+        return rows != null ? rows(Stream.of(rows).map(TableConsumer::toString).toArray(String[][]::new)) : rows();
     }
 
     /**
@@ -85,6 +105,11 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
     @Override
     void accept(Stream<String[]> rows);
 
+    @Override
+    default TableConsumer andThen(Consumer<? super Stream<String[]>> after) {
+        return Consumer.super.andThen(after)::accept;
+    }
+
     //==================================================================================================================
     // AutoCloseable Implementation Methods
     //==================================================================================================================
@@ -92,5 +117,21 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
     @Override
     default void close() throws IOException {
         // Do nothing.
+    }
+
+    //==================================================================================================================
+    // Private Helper Methods
+    //==================================================================================================================
+
+    /**
+     * Convert a given array of {@link Object}s into an array of {@link String}s.
+     *
+     * @param objects The array of {@link Object}s to convert into an array of {@link String}s
+     */
+    private static String[] toString(Object[] objects) {
+        return Stream
+            .of(objects)
+            .map(String::valueOf)
+            .toArray(String[]::new);
     }
 }

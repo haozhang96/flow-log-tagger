@@ -22,6 +22,6 @@ interface Constants {
     long FLOW_LOG_RECORD_SIZE = 129L; // The approximate size in bytes for a single line of record in a flow log file
 
     // Tables
-    Map<Protocol, String> TAGS = new TableFileReader(LOOKUP_TABLE_PATH).project(Tags::new);
-    Map<String, Protocol> IANA_PROTOCOLS = new TableFileReader(IANA_PROTOCOLS_PATH).project(IANAProtocols::new);
+    Tags TAGS = new Tags(new TableFileReader(LOOKUP_TABLE_PATH));
+    IANAProtocols IANA_PROTOCOLS = new IANAProtocols(new TableFileReader(IANA_PROTOCOLS_PATH));
 }

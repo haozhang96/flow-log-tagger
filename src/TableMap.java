@@ -23,6 +23,14 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
     // Constructors
     //==================================================================================================================
 
+    TableMap(Collector<String[], ?, Map<K, V>> collector) {
+        this(TableSupplier.NOOP, collector);
+    }
+
+    TableMap(UnaryOperator<Stream<String[]>> mapper, Collector<String[], ?, Map<K, V>> collector) {
+        this(TableSupplier.NOOP, mapper, collector);
+    }
+
     TableMap(TableSupplier data, Collector<String[], ?, Map<K, V>> collector) {
         this(data, UnaryOperator.identity(), collector);
     }

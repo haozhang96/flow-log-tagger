@@ -1,6 +1,3 @@
-import java.util.Collections;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -13,25 +10,6 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
      * A {@link TableConsumer} that generates no tabular data; mainly used for testing
      */
     TableSupplier NOOP = Stream::empty;
-
-    //==================================================================================================================
-    // Implementation Methods
-    //==================================================================================================================
-
-    /**
-     * Project the data of this {@link TableSupplier} onto a {@link TableMap} using its given
-     *   {@link TableSupplier}-accepting constructor.
-     *
-     * @param tableFactory The {@link TableSupplier}-accepting constructor of the {@link TableMap} to project this
-     *                     {@link TableSupplier}'s data onto
-     * @param <K> The type of keys mapped by the constructed {@link TableMap}
-     * @param <V> The type of values mapped by the constructed {@link TableMap}
-     * @return An unmodifiable {@link Map} view of the constructed {@link TableMap} with the data of this
-     *         {@link TableSupplier} projected onto it
-     */
-    default <K, V> Map<K, V> project(Function<? super TableSupplier, ? extends TableMap<K, V>> tableFactory) {
-        return Collections.unmodifiableMap(tableFactory.apply(this));
-    }
 
     //==================================================================================================================
     // Supplier Implementation Methods

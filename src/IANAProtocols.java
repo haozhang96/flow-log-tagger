@@ -40,6 +40,19 @@ class IANAProtocols extends TableMap<String, Protocol> {
     // Constructors
     //==================================================================================================================
 
+    /**
+     * Construct an empty instance of {@link IANAProtocols}.
+     */
+    IANAProtocols() {
+        super(MAPPER, COLLECTOR);
+    }
+
+    /**
+     * Construct an instance of {@link IANAProtocols} with its initial mappings built using a given
+     *   {@link TableSupplier}.
+     *
+     * @param data The {@link TableSupplier} to use to build the constructed {@link IANAProtocols}' initial mappings
+     */
     IANAProtocols(TableSupplier data) {
         super(data, MAPPER, COLLECTOR);
     }

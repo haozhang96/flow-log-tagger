@@ -36,6 +36,18 @@ class Tags extends TableMap<Protocol, String> {
     // Constructors
     //==================================================================================================================
 
+    /**
+     * Construct an empty instance of {@link Tags}.
+     */
+    Tags() {
+        super(COLLECTOR);
+    }
+
+    /**
+     * Construct an instance of {@link Tags} with its initial mappings built using a given {@link TableSupplier}.
+     *
+     * @param data The {@link TableSupplier} to use to build the constructed {@link Tags}' initial mappings
+     */
     Tags(TableSupplier data) {
         super(data, COLLECTOR);
     }

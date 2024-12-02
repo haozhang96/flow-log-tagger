@@ -1,3 +1,5 @@
 .idea/
+data/debug.csv
+data/output.csv
 out/
 *.iml
