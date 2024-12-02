@@ -1,5 +1,7 @@
 import java.io.Closeable;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,7 +51,7 @@ class FlowLogProcessor implements Runnable, Closeable {
 
     @Override
     public void run() {
-        final var startTime = System.currentTimeMillis();
+        final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
         System.out.format("Processing %s...%n", input);
 
@@ -68,12 +70,12 @@ class FlowLogProcessor implements Runnable, Closeable {
             output.row();
             writeCombinations(counts.getValue());
         } finally {
-            final var duration = (double) (System.currentTimeMillis() - startTime) / 1000L;
+            final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
             if (Settings.DEBUG) {
                 final var size = rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE;
-                System.out.format("Processed %d rows / ~%.2f MiB in %.4f seconds%n", rowCount.get(), size, duration);
+                System.out.format("Processed %d rows / ~%.2f MiB in %.5f seconds.%n", rowCount.get(), size, duration);
             } else {
-                System.out.format("Processed in %.4f seconds%n", duration);
+                System.out.format("Processed in %.5f seconds.%n", duration);
             }
         }
     }
