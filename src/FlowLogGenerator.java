@@ -1,11 +1,10 @@
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * This class is a {@link TableGenerator} that generates a flow log with a defined number of rows using randomly generated
- *   data, and is mainly used for testing.
+ * This class is a {@link TableGenerator} that generates a flow log with a defined number of rows using randomly
+ *   generated data, and is mainly used for testing.
  */
 class FlowLogGenerator extends TableGenerator {
-    private static final String VERSION = String.valueOf(2L);
     private static final int[] PORTS = {23, 25, 80, 110, 143, 443, 993, 1024, 1030, 49152, 49153, 49154, 49321, 56000};
     private static final int[] PROTOCOLS = {1, 4, 6, 12, 17, 27, 41, 58, 115, 143};
 
@@ -66,12 +65,12 @@ class FlowLogGenerator extends TableGenerator {
     // Private Helper Methods
     //==================================================================================================================
 
-    private static String version() {
-        return VERSION;
+    private static long version() {
+        return 2L;
     }
 
-    private static String accountID() {
-        return String.valueOf(ThreadLocalRandom.current().nextLong(0L, 999_999_999_999L));
+    private static long accountID() {
+        return ThreadLocalRandom.current().nextLong(0L, 999_999_999_999L);
     }
 
     private static String interfaceID() {
@@ -96,32 +95,32 @@ class FlowLogGenerator extends TableGenerator {
         );
     }
 
-    private static String sourcePort() {
-        return String.valueOf(PORTS[ThreadLocalRandom.current().nextInt(PORTS.length)]);
+    private static int sourcePort() {
+        return PORTS[ThreadLocalRandom.current().nextInt(PORTS.length)];
     }
 
-    private static String destinationPort() {
-        return String.valueOf(PORTS[ThreadLocalRandom.current().nextInt(PORTS.length)]);
+    private static int destinationPort() {
+        return PORTS[ThreadLocalRandom.current().nextInt(PORTS.length)];
     }
 
-    private static String protocol() {
-        return String.valueOf(PROTOCOLS[ThreadLocalRandom.current().nextInt(PROTOCOLS.length)]);
+    private static int protocol() {
+        return PROTOCOLS[ThreadLocalRandom.current().nextInt(PROTOCOLS.length)];
     }
 
-    private static String packets() {
-        return String.valueOf(ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
+    private static int packets() {
+        return ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
     }
 
-    private static String bytes() {
-        return String.valueOf(ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE));
+    private static int bytes() {
+        return ThreadLocalRandom.current().nextInt(1, Integer.MAX_VALUE);
     }
 
-    private static String start() {
-        return String.valueOf(System.currentTimeMillis());
+    private static long start() {
+        return System.currentTimeMillis();
     }
 
-    private static String end() {
-        return String.valueOf(System.currentTimeMillis());
+    private static long end() {
+        return System.currentTimeMillis();
     }
 
     private static String action() {

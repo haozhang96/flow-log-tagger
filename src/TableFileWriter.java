@@ -26,10 +26,25 @@ class TableFileWriter implements TableConsumer, Flushable {
     // Constructors
     //==================================================================================================================
 
+    /**
+     * Construct an instance of {@link TableFileWriter} that writes to a given {@link Path}, inferring the column
+     *   separator and creating and/or appending to the end of the file without truncating it first.
+     *
+     * @param path The {@link Path} that the constructed {@link TableFileWriter} will write to
+     */
     TableFileWriter(Path path) {
-        this(path, null, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+        this(path, null, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
+    /**
+     * Construct an instance of {@link TableFileWriter} that writes to a given {@link Path}, using a given column
+     *   separator and {@link OpenOption}s to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}.
+     *
+     * @param path The {@link Path} that the constructed {@link TableFileWriter} will write to
+     * @param separator The column separator to use for joining the columns into lines; may be {@code null} to allow
+     *                  {@link TableFileWriter} to infer this information based on {@code path}'s file extension
+     * @param options The list of {@link OpenOption}(s) to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}
+     */
     TableFileWriter(Path path, String separator, OpenOption... options) {
         try {
             this.path = path;

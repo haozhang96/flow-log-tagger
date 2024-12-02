@@ -6,19 +6,17 @@ import java.util.stream.Stream;
  */
 class TableGenerator implements TableSupplier {
     private final long rows;
-    private final Supplier<String>[] columnGenerators;
+    private final Supplier<?>[] columnGenerators;
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    @SafeVarargs
-    TableGenerator(Supplier<String>... columnGenerators) {
+    TableGenerator(Supplier<?>... columnGenerators) {
         this(Long.MAX_VALUE, columnGenerators);
     }
 
-    @SafeVarargs
-    TableGenerator(long rows, Supplier<String>... columnGenerators) {
+    TableGenerator(long rows, Supplier<?>... columnGenerators) {
         this.rows = rows;
         this.columnGenerators = columnGenerators;
     }
@@ -33,6 +31,6 @@ class TableGenerator implements TableSupplier {
             .generate(() -> columnGenerators)
             .limit(rows)
             .map(Stream::of)
-            .map(columnGenerators -> columnGenerators.map(Supplier::get).toArray(String[]::new));
+            .map(columnGenerators -> columnGenerators.map(Supplier::get).map(String::valueOf).toArray(String[]::new));
     }
 }

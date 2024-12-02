@@ -18,7 +18,7 @@ class FlowLogProcessor implements Runnable, Closeable {
     private static final int PROTOCOL = 7;
 
     private final TableSupplier input;
-    private final Map<Protocol, String> tags;
+    private final Tags tags;
     private final TableConsumer output;
     private final TableConsumer debug = Settings.DEBUG ? new TableFileWriter(Constants.DEBUG_PATH) : TableConsumer.NOOP;
     private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> countingCollector =
@@ -36,10 +36,11 @@ class FlowLogProcessor implements Runnable, Closeable {
         this(input, null, output);
     }
 
-    FlowLogProcessor(TableSupplier input, Map<Protocol, String> tags, TableConsumer output) {
+    FlowLogProcessor(TableSupplier input, Tags tags, TableConsumer output) {
         this.input = input;
         this.tags = Objects.requireNonNullElse(tags, Constants.TAGS);
         this.output = output;
+        warmUp(); // This is done only once per JVM start-up, but cannot be done using a static initialization block.
     }
 
     //==================================================================================================================
@@ -48,14 +49,13 @@ class FlowLogProcessor implements Runnable, Closeable {
 
     @Override
     public void run() {
-        warmUp();
-
         final var startTime = System.currentTimeMillis();
         final var rowCount = new AtomicLong();
-        final Consumer<String[]> rowCounter = ignored -> rowCount.incrementAndGet();
         System.out.format("Processing %s...%n", input);
 
         try (var rows = input.get()) {
+            final Consumer<String[]> rowCounter =
+                Settings.DEBUG ? ignored -> rowCount.incrementAndGet() : ignored -> {};
             final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
                 rows
                     .parallel()
@@ -63,16 +63,18 @@ class FlowLogProcessor implements Runnable, Closeable {
                     .peek(rowCounter.andThen(debug::row)) // Potentially write the input data to a file for debugging.
                     .map(this::toProtocol)
                     .collect(countingCollector);
+
             writeTags(counts.getKey());
             output.row();
             writeCombinations(counts.getValue());
         } finally {
-            System.out.format(
-                "Processed %d rows / ~%.2f MiB in %.4f seconds%n",
-                rowCount.get(),
-                rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE,
-                (double) (System.currentTimeMillis() - startTime) / 1000L
-            );
+            final var duration = (double) (System.currentTimeMillis() - startTime) / 1000L;
+            if (Settings.DEBUG) {
+                final var size = rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE;
+                System.out.format("Processed %d rows / ~%.2f MiB in %.4f seconds%n", rowCount.get(), size, duration);
+            } else {
+                System.out.format("Processed in %.4f seconds%n", duration);
+            }
         }
     }
 
@@ -81,9 +83,11 @@ class FlowLogProcessor implements Runnable, Closeable {
     //==================================================================================================================
 
     @Override
+    @SuppressWarnings("EmptyTryBlock")
     public void close() throws IOException {
-        output.close();
-        debug.close();
+        try (output; debug) {
+            // We use this try-with-resources statement to ensure all resources are closed regardless of exceptions.
+        }
     }
 
     //==================================================================================================================
@@ -91,19 +95,17 @@ class FlowLogProcessor implements Runnable, Closeable {
     //==================================================================================================================
 
     private void writeTags(Map<String, Long> tags) {
-        output.row("Tag Counts:");
-        output.row("Tag", "Count");
-        tags.forEach((tag, count) ->
-            output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, String.valueOf(count))
-        );
+        output
+            .row("Tag Counts:")
+            .row("Tag", "Count");
+        tags.forEach((tag, count) -> output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, count));
     }
 
     private void writeCombinations(Map<Protocol, Long> combinations) {
-        output.row("Port/Protocol Combination Counts:");
-        output.row("Port", "Protocol", "Count");
-        combinations.forEach((protocol, count) ->
-            output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count))
-        );
+        output
+            .row("Port/Protocol Combination Counts:")
+            .row("Port", "Protocol", "Count");
+        combinations.forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), count));
     }
 
     private Protocol toProtocol(String[] columns) {
