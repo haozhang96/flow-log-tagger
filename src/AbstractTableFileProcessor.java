@@ -3,7 +3,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -11,8 +10,6 @@ import java.util.stream.Collectors;
  *   {@link TableFileWriter}.
  */
 sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableFileWriter {
-    private static final Pattern QUOTE = Pattern.compile("[" + Pattern.quote("").replace("\\", "\\\\") + "]");
-
     final Path path;
     final String separator;
 
@@ -30,7 +27,7 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
      */
     AbstractTableFileProcessor(Path path, String separator) {
         this.path = path;
-        this.separator = Pattern.quote(Objects.requireNonNullElseGet(separator, () -> inferSeparator(path)));
+        this.separator = Objects.requireNonNullElseGet(separator, () -> inferSeparator(path));
     }
 
     //==================================================================================================================
@@ -39,7 +36,7 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
 
     @Override
     public String toString() {
-        return "%s[path=%s, separator=%s]".formatted(super.toString(), path, QUOTE.matcher(separator).replaceAll(""));
+        return "%s[path=%s, separator=%s]".formatted(super.toString(), path, separator);
     }
 
     //==================================================================================================================
