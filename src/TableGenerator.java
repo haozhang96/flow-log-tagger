@@ -33,4 +33,13 @@ class TableGenerator implements TableSupplier {
             .map(Stream::of)
             .map(columnGenerators -> columnGenerators.map(Supplier::get).map(String::valueOf).toArray(String[]::new));
     }
+
+    //==================================================================================================================
+    // Object Implementation Methods
+    //==================================================================================================================
+
+    @Override
+    public String toString() {
+        return "%s[rows=%d, columns=%d]".formatted(super.toString(), rows, columnGenerators.length);
+    }
 }

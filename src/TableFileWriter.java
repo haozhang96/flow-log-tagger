@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -17,10 +16,8 @@ import java.util.stream.Stream;
  *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
  *   statement</a> to ensure any underlying resources are properly closed.
  */
-class TableFileWriter implements TableConsumer, Flushable {
-    private final Path path;
+non-sealed class TableFileWriter extends AbstractTableFileProcessor implements TableConsumer, Flushable {
     private final BufferedWriter writer;
-    private final String separator;
 
     //==================================================================================================================
     // Constructors
@@ -42,13 +39,13 @@ class TableFileWriter implements TableConsumer, Flushable {
      *
      * @param path The {@link Path} that the constructed {@link TableFileWriter} will write to
      * @param separator The column separator to use for joining the columns into lines; may be {@code null} to allow
-     *                  {@link TableFileWriter} to infer this information based on {@code path}'s file extension
+     *                  {@link TableFileWriter} to infer this information based on {@code path}'s file characteristics
      * @param options The list of {@link OpenOption}(s) to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}
      */
     TableFileWriter(Path path, String separator, OpenOption... options) {
+        super(path, separator);
+
         try {
-            this.path = path;
-            this.separator = Objects.requireNonNullElseGet(separator, () -> TableFileReader.inferSeparator(path));
             writer = Files.newBufferedWriter(path, options);
         } catch (IOException exception) {
             throw new UncheckedIOException("Failed to open file for writing: " + path, exception);
@@ -88,7 +85,7 @@ class TableFileWriter implements TableConsumer, Flushable {
         try {
             writer.close();
         } finally {
-            System.out.println("Wrote file: " + path);
+            System.out.println("[<] Wrote file: " + path);
         }
     }
 }
