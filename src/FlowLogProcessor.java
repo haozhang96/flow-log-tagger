@@ -53,7 +53,7 @@ class FlowLogProcessor implements Runnable, Closeable {
     public void run() {
         final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
-        System.out.format("Processing %s...%n", input);
+        System.out.format("[%%] Processing %s...%n", input);
 
         try (var rows = input.get()) {
             final Consumer<String[]> rowCounter =
@@ -73,9 +73,9 @@ class FlowLogProcessor implements Runnable, Closeable {
             final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
             if (Settings.DEBUG) {
                 final var size = rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE;
-                System.out.format("Processed %d rows / ~%.2f MiB in %.5f seconds.%n", rowCount.get(), size, duration);
+                System.out.format("[#] Processed %d rows (~%.2f MiB) in %.5f seconds.%n", rowCount.get(), size, duration);
             } else {
-                System.out.format("Processed in %.5f seconds.%n", duration);
+                System.out.format("[#] Processed in %.5f seconds.%n", duration);
             }
         }
     }
@@ -122,7 +122,7 @@ class FlowLogProcessor implements Runnable, Closeable {
     private static void warmUp() {
         if (WARMED_UP.compareAndSet(false, true)) {
             try (var processor = new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1000L), TableConsumer.NOOP)) {
-                System.out.println("Warming up the Java virtual machine...");
+                System.out.println("[!] Warming up the Java virtual machine...");
                 processor.run();
             } catch (IOException exception) {
                 // We don't care; this is only a warm-up.
