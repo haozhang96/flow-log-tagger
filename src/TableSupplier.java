@@ -1,3 +1,4 @@
+import java.lang.ref.Cleaner;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -44,6 +45,8 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
      *   statement</a> to ensure any underlying resources are properly closed.
      */
     class Iterator implements java.util.Iterator<String[]>, AutoCloseable {
+        private static final Cleaner CLEANER = Cleaner.create();
+
         private final Stream<String[]> data;
         private final java.util.Iterator<String[]> iterator;
 
@@ -52,7 +55,9 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
         //==============================================================================================================
 
         Iterator(TableSupplier table) {
-            iterator = (data = table.get()).iterator();
+            final var data = this.data = table.get();
+            CLEANER.register(this, data::close); // Close the underlying stream when we become garbage-collected.
+            iterator = data.iterator();
         }
 
         //==============================================================================================================
@@ -66,6 +71,7 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
         @Override
         public String[] next() {
+            // Ensure that the underlying stream is closed at the end of iteration.
             try (this) {
                 return iterator.next();
             }
@@ -77,6 +83,7 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
         @Override
         public void close() {
+            // Only close the underlying stream at the end of iteration; the cleaner will handle the edge cases.
             if (!hasNext()) {
                 data.close();
             }
