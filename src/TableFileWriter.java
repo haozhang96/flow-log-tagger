@@ -57,8 +57,8 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
     //==================================================================================================================
 
     @Override
-    public void accept(Stream<String[]> rows) {
-        rows.forEachOrdered(columns -> {
+    public void accept(Iterable<String[]> rows) {
+        rows.forEach(columns -> {
             try {
                 writer.write(String.join(separator, columns) + System.lineSeparator());
             } catch (IOException exception) {

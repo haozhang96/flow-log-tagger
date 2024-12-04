@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * This class is an abstract implementation of {@link ConcurrentMap} that uses a {@link TableSupplier} to build its
@@ -37,9 +38,10 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
 
     TableMap(TableSupplier data, UnaryOperator<Stream<String[]>> mapper, Collector<String[], ?, Map<K, V>> collector) {
         try (var rows = data.get()) {
+            putAll(mapper.apply(rows).collect(collector));
+        } finally {
             this.mapper = mapper;
             this.collector = collector;
-            accept(rows);
         }
     }
 
@@ -48,7 +50,7 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
     //==================================================================================================================
 
     @Override
-    public void accept(Stream<String[]> rows) {
-        putAll(mapper.apply(rows).collect(collector));
+    public void accept(Iterable<String[]> rows) {
+        putAll(mapper.apply(StreamSupport.stream(rows.spliterator(), false)).collect(collector));
     }
 }

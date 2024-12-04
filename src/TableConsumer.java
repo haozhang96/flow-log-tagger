@@ -1,13 +1,13 @@
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 /**
- * This interface defines an object that consumes tabular data from a {@link Stream} of columns as string arrays.
+ * This interface defines an object that consumes tabular data from a {@link Iterable} of columns as string arrays.
  * <br/><br/>
  *
  * <b>Note:</b> Instances of this interface must be used with a
@@ -15,7 +15,7 @@ import java.util.stream.StreamSupport;
  *   statement</a> to ensure any underlying resources are properly closed.
  */
 @FunctionalInterface
-interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
+interface TableConsumer extends Consumer<Iterable<String[]>>, Closeable {
     /**
      * A {@link TableConsumer} that consumes no tabular data; mainly used for testing
      */
@@ -32,7 +32,7 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(Object... columns) {
-        return columns != null ? rows(toString(columns)) : row();
+        return invoke(this::row, this::toString, columns);
     }
 
     /**
@@ -42,7 +42,17 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(String... columns) {
-        return rows(columns);
+        return invoke(this::row, Arrays::asList, columns);
+    }
+
+    /**
+     * Append a new row with a given {@link Stream} of column values.
+     *
+     * @param columns The values for the columns to append to the new row
+     * @return The same {@link TableConsumer} for chaining
+     */
+    default TableConsumer row(Stream<String> columns) {
+        return invoke(this::row, Stream::toList, columns);
     }
 
     /**
@@ -52,11 +62,7 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(Iterable<String> columns) {
-        return switch (columns) {
-            case Collection<String> collection -> rows(collection.toArray(String[]::new));
-            case null -> rows(); // Append an empty row.
-            default -> rows(StreamSupport.stream(columns.spliterator(), false).toArray(String[]::new));
-        };
+        return invoke(this::rows, Collections::singletonList, toArray(columns));
     }
 
     /**
@@ -66,7 +72,7 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer rows(Object[]... rows) {
-        return rows != null ? rows(Stream.of(rows).map(TableConsumer::toString).toArray(String[][]::new)) : rows();
+        return invoke(this::rows, array -> Stream.of(array).map(this::toString).map(this::toArray).toList(), rows);
     }
 
     /**
@@ -76,7 +82,17 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer rows(String[]... rows) {
-        return rows(Arrays.asList(rows));
+        return invoke(this::rows, Arrays::asList, rows);
+    }
+
+    /**
+     * Append a given {@link Stream} of rows of column values.
+     *
+     * @param rows The new rows of column values to append
+     * @return The same {@link TableConsumer} for chaining
+     */
+    default TableConsumer rows(Stream<String[]> rows) {
+        return invoke(this::rows, Stream::toList, rows);
     }
 
     /**
@@ -86,11 +102,8 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer rows(Iterable<String[]> rows) {
-        return switch (rows) {
-            case Collection<String[]> collection -> { accept(collection.stream()); yield this; }
-            case null -> this; // Do nothing.
-            default -> { accept(StreamSupport.stream(rows.spliterator(), false)); yield this; }
-        };
+        accept(rows);
+        return this;
     }
 
     //==================================================================================================================
@@ -98,15 +111,15 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
     //==================================================================================================================
 
     /**
-     * Append a given {@link Stream} of rows of column values.
+     * Append a given {@link Iterable} of rows of column values.
      *
      * @param rows The new rows of column values to append
      */
     @Override
-    void accept(Stream<String[]> rows);
+    void accept(Iterable<String[]> rows);
 
     @Override
-    default TableConsumer andThen(Consumer<? super Stream<String[]>> after) {
+    default TableConsumer andThen(Consumer<? super Iterable<String[]>> after) {
         return Consumer.super.andThen(after)::accept;
     }
 
@@ -124,14 +137,38 @@ interface TableConsumer extends Consumer<Stream<String[]>>, Closeable {
     //==================================================================================================================
 
     /**
-     * Convert a given array of {@link Object}s into an array of {@link String}s.
+     * Convert a given array of {@link Object}s into a {@link Stream} of {@link String}s.
      *
-     * @param objects The array of {@link Object}s to convert into an array of {@link String}s
+     * @param array The array of {@link Object}s to convert into a {@link Stream} of {@link String}s
      */
-    private static String[] toString(Object[] objects) {
+    private Iterable<String> toString(Object[] array) {
         return Stream
-            .of(objects)
+            .of(array)
             .map(String::valueOf)
-            .toArray(String[]::new);
+            .toList();
+    }
+
+    /**
+     * Convert a given {@link Stream} of {@link String}s into an array of {@link String}s.
+     *
+     * @param iterable The {@link Stream} of {@link String}s to convert into an array of {@link String}s
+     */
+    private String[] toArray(Iterable<String> iterable) {
+        return switch (iterable) {
+            case Collection<String> collection -> collection.toArray(String[]::new);
+            case null -> new String[0]; // This is not enough of an occurrence to worry about repeated allocations.
+            default -> StreamSupport.stream(iterable.spliterator(), false).toArray(String[]::new);
+        };
+    }
+
+    private static <T, E, R> R invoke(
+        Function<? super Iterable<E>, R> method,
+        Function<? super T, ? extends Iterable<E>> mapper,
+        T input
+    ) {
+        return Optional
+            .ofNullable(input)
+            .map(method.compose(mapper))
+            .orElseGet(() -> method.apply(List.of()));
     }
 }

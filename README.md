@@ -45,6 +45,10 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 * Data streaming is used for memory constraints where possible.
 * Hash-based comparisons were used for performant lookups where possible.
 
+## Design Choices
+* `System.out` was used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly verbose
+  information logged to the console.
+
 ## Example
 [input.log](data/input.log)
 ```
