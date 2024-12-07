@@ -3,6 +3,12 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * This class is a {@link TableGenerator} that generates a flow log with a defined number of rows using randomly
  *   generated data, and is mainly used for testing.
+ * <br/><br/>
+ *
+ * An example row of generated flow log is as follows:
+ * {@snippet lang="csv":
+ *   2 123456789012 eni-0a1b2c3d 10.0.1.201 198.51.100.2 443 49153 6 25 20000 1620140761 1620140821 ACCEPT OK
+ * }
  */
 class FlowLogGenerator extends TableGenerator {
     private static final int[] PORTS = {23, 25, 80, 110, 143, 443, 993, 1024, 1030, 49152, 49153, 49154, 49321, 56000};

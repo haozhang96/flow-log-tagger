@@ -1,5 +1,3 @@
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -8,14 +6,9 @@ import java.util.stream.StreamSupport;
 
 /**
  * This interface defines an object that consumes tabular data from a {@link Iterable} of columns as string arrays.
- * <br/><br/>
- *
- * <b>Note:</b> Instances of this interface must be used with a
- *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
- *   statement</a> to ensure any underlying resources are properly closed.
  */
 @FunctionalInterface
-interface TableConsumer extends Consumer<Iterable<String[]>>, Closeable {
+interface TableConsumer extends Consumer<Iterable<String[]>> {
     /**
      * A {@link TableConsumer} that consumes no tabular data; mainly used for testing
      */
@@ -121,15 +114,6 @@ interface TableConsumer extends Consumer<Iterable<String[]>>, Closeable {
     @Override
     default TableConsumer andThen(Consumer<? super Iterable<String[]>> after) {
         return Consumer.super.andThen(after)::accept;
-    }
-
-    //==================================================================================================================
-    // AutoCloseable Implementation Methods
-    //==================================================================================================================
-
-    @Override
-    default void close() throws IOException {
-        // Do nothing.
     }
 
     //==================================================================================================================

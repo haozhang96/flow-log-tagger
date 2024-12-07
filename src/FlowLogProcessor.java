@@ -85,9 +85,9 @@ class FlowLogProcessor implements Runnable, Closeable {
     //==================================================================================================================
 
     @Override
-    @SuppressWarnings("EmptyTryBlock")
+    @SuppressWarnings({"unused", "EmptyTryBlock"})
     public void close() throws IOException {
-        try (output; debug) {
+        try (var output = toCloseable(this.output); var debug = toCloseable(this.debug)) {
             // We use this try-with-resources statement to ensure all resources are closed regardless of exceptions.
         }
     }
@@ -117,6 +117,10 @@ class FlowLogProcessor implements Runnable, Closeable {
 
     private String getTag(Protocol protocol) {
         return tags.getOrDefault(protocol, Protocol.UNKNOWN.name());
+    }
+
+    private static Closeable toCloseable(Object object) {
+        return object instanceof Closeable closeable ? closeable : () -> {};
     }
 
     private static void warmUp() {

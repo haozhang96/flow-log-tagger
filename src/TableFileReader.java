@@ -4,7 +4,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,7 +55,6 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     public Stream<String[]> get() {
         System.out.println("[>] Reading file: " + path);
 
-        final var separator = Pattern.quote(this.separator);
         return lines(path)
             .skip(hasHeaderRow ? 1L : 0L) // We may use Stream.dropWhile() in the future to skip multiple header rows.
             .map(line -> line.split(separator));

@@ -1,7 +1,4 @@
-import java.io.BufferedWriter;
-import java.io.Flushable;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -16,7 +13,7 @@ import java.util.stream.Stream;
  *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
  *   statement</a> to ensure any underlying resources are properly closed.
  */
-non-sealed class TableFileWriter extends AbstractTableFileProcessor implements TableConsumer, Flushable {
+non-sealed class TableFileWriter extends AbstractTableFileProcessor implements TableConsumer, Flushable, Closeable {
     private final BufferedWriter writer;
 
     //==================================================================================================================

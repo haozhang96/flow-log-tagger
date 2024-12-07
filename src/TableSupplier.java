@@ -4,6 +4,11 @@ import java.util.stream.Stream;
 
 /**
  * This interface defines an object that supplies tabular data lazily into a {@link Stream} of columns as string arrays.
+ * <br/><br/>
+ *
+ * A {@link TableSupplier} can be used multiple times. {@link Stream}s (and, consequently,
+ *   {@link java.util.Iterator Iterator}s) retrieved from a {@link TableSupplier} are independent of each other.
+ * <br/><br/>
  */
 @FunctionalInterface
 interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
@@ -83,7 +88,7 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
         @Override
         public void close() {
-            // Only close the underlying stream at the end of iteration; the cleaner will handle the edge cases.
+            // Only close the underlying stream at the end of iteration; the cleaner will handle incomplete iterations.
             if (!hasNext()) {
                 data.close();
             }
