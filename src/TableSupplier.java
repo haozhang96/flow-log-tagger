@@ -7,8 +7,7 @@ import java.util.stream.Stream;
  * <br/><br/>
  *
  * A {@link TableSupplier} can be used multiple times. {@link Stream}s (and, consequently,
- *   {@link java.util.Iterator Iterator}s) retrieved from a {@link TableSupplier} are independent of each other.
- * <br/><br/>
+ *   {@link java.util.Iterator Iterator}s) retrieved from a {@link TableSupplier} are independent of one another.
  */
 @FunctionalInterface
 interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
@@ -52,17 +51,17 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
     class Iterator implements java.util.Iterator<String[]>, AutoCloseable {
         private static final Cleaner CLEANER = Cleaner.create();
 
-        private final Stream<String[]> data;
-        private final java.util.Iterator<String[]> iterator;
+        private final Stream<String[]> stream;
+        private final java.util.Iterator<String[]> delegate;
 
         //==============================================================================================================
         // Constructors
         //==============================================================================================================
 
         Iterator(TableSupplier table) {
-            final var data = this.data = table.get();
-            CLEANER.register(this, data::close); // Close the underlying stream when we become garbage-collected.
-            iterator = data.iterator();
+            final var stream = this.stream = table.get();
+            CLEANER.register(this, stream::close); // Close the underlying stream when we become garbage-collected.
+            delegate = stream.iterator();
         }
 
         //==============================================================================================================
@@ -71,14 +70,14 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            return delegate.hasNext();
         }
 
         @Override
         public String[] next() {
             // Ensure that the underlying stream is closed at the end of iteration.
             try (this) {
-                return iterator.next();
+                return delegate.next();
             }
         }
 
@@ -90,7 +89,7 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
         public void close() {
             // Only close the underlying stream at the end of iteration; the cleaner will handle incomplete iterations.
             if (!hasNext()) {
-                data.close();
+                stream.close();
             }
         }
     }

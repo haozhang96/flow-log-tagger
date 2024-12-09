@@ -62,7 +62,7 @@ class FlowLogProcessor implements Runnable, Closeable {
                 rows
                     .parallel()
                     .unordered()
-                    .peek(rowCounter.andThen(debug::row)) // Potentially write the input data to a file for debugging.
+                    .peek(rowCounter.andThen(debug::rows)) // Potentially write the input data to a file for debugging.
                     .map(this::toProtocol)
                     .collect(countingCollector);
 

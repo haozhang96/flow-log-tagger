@@ -56,6 +56,7 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
     @Override
     public void accept(Iterable<String[]> rows) {
         rows.forEach(columns -> {
+            // Write the row and line separator in a single call to ensure that the line separator immediately follows.
             try {
                 writer.write(String.join(separator, columns) + System.lineSeparator());
             } catch (IOException exception) {
