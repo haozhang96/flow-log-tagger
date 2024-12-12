@@ -112,7 +112,23 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
             .collect(Collectors.teeing(
                 Collectors.filtering(Character::isAlphabetic, Collectors.counting()),
                 Collectors.filtering(Character::isDigit, Collectors.counting()),
-                (letters, digits) -> letters >= digits // Rudimentary but intuitive heuristic
+                TableFileReader::isHeaderRow
             ));
+    }
+
+    /**
+     * Determine whether a line in a file is a header row by comparing its given
+     *   {@linkplain Character#isAlphabetic(int) letter} and {@linkplain Character#isDigit(int) digit} counts.
+     * <br/><br/>
+     *
+     * We use rudimentary but intuitive logic that, for the first {@code n} consecutive lines in a file, if its number
+     *   of {@linkplain Character#isAlphabetic(int) letters} far outweigh its number of
+     *   {@linkplain Character#isDigit(int) digits}, it would be considered a header row.
+     *
+     * @param letters The number of {@linkplain Character#isAlphabetic(int) letters} in the line of a file
+     * @param digits The number of {@linkplain Character#isDigit(int) digits} in the line of a file
+     */
+    private static boolean isHeaderRow(long letters, long digits) {
+        return letters >= digits * 5L;
     }
 }
