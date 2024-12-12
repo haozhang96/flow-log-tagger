@@ -46,8 +46,10 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 * Hash-based comparisons were used for performant lookups where possible.
 
 ## Design Choices
-* `System.out` was used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly verbose
-  information logged to the console.
+* `java.util.Objects.requireNonNull(...)` was used for runtime null-checking to avoid external dependencies required for
+  compile-time null-checking, such as annotations from external dependencies (e.g., `javax.annotation.Nonnull`).
+* `java.lang.System.out` was used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
+  verbose information logged to the console.
 
 ## Example
 [input.log](data/input.log)

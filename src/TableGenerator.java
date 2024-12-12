@@ -1,3 +1,4 @@
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -5,6 +6,8 @@ import java.util.stream.Stream;
  * This class generates tabular data lazily into a {@link Stream} of columns as string arrays.
  */
 class TableGenerator implements TableSupplier {
+    private static final Supplier<?>[] NO_COLUMN_GENERATORS = {};
+
     private final long rows;
     private final Supplier<?>[] columnGenerators;
 
@@ -18,7 +21,7 @@ class TableGenerator implements TableSupplier {
 
     TableGenerator(long rows, Supplier<?>... columnGenerators) {
         this.rows = rows;
-        this.columnGenerators = columnGenerators;
+        this.columnGenerators = Objects.requireNonNullElse(columnGenerators, NO_COLUMN_GENERATORS);
     }
 
     //==================================================================================================================
@@ -33,8 +36,8 @@ class TableGenerator implements TableSupplier {
         return Stream
             .generate(() -> columnGenerators)
             .limit(rows)
-            .map(Stream::of)
-            .map(columnGenerators -> columnGenerators.map(Supplier::get).map(String::valueOf).toArray(String[]::new));
+            .map(Stream::of) // TODO: Can we optimize this to create less streams?
+            .map(TableGenerator::generate);
     }
 
     //==================================================================================================================
@@ -44,5 +47,16 @@ class TableGenerator implements TableSupplier {
     @Override
     public String toString() {
         return "%s[rows=%d, columns=%d]".formatted(super.toString(), rows, columnGenerators.length);
+    }
+
+    //==================================================================================================================
+    // Private Helper Methods
+    //==================================================================================================================
+
+    private static String[] generate(Stream<Supplier<?>> columnGenerators) {
+        return columnGenerators
+            .map(Supplier::get)
+            .map(String::valueOf)
+            .toArray(String[]::new);
     }
 }

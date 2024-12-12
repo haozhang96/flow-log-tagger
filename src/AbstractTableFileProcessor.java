@@ -26,7 +26,7 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
      *                  characteristics
      */
     AbstractTableFileProcessor(Path path, String separator) {
-        this.path = path;
+        this.path = Objects.requireNonNull(path);
         this.separator = Objects.requireNonNullElseGet(separator, () -> inferSeparator(path));
     }
 

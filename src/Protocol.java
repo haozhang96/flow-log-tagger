@@ -33,7 +33,7 @@ record Protocol(int port, String name) implements Comparable<Protocol> {
 
     Protocol(int port, String name) {
         this.port = port;
-        this.name = name.toLowerCase();
+        this.name = name.toLowerCase(); // Implicit null check
     }
 
     //==================================================================================================================

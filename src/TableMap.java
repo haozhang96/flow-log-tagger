@@ -1,5 +1,7 @@
 import java.io.Serial;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.UnaryOperator;
@@ -37,11 +39,11 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
     }
 
     TableMap(TableSupplier data, UnaryOperator<Stream<String[]>> mapper, Collector<String[], ?, Map<K, V>> collector) {
+        this.mapper = Objects.requireNonNull(mapper);
+        this.collector = Objects.requireNonNull(collector);
+
         try (var rows = data.get()) {
-            putAll(mapper.apply(rows).collect(collector));
-        } finally {
-            this.mapper = mapper;
-            this.collector = collector;
+            putAll(rows);
         }
     }
 
@@ -51,6 +53,21 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
 
     @Override
     public void accept(Iterable<String[]> rows) {
-        putAll(mapper.apply(StreamSupport.stream(rows.spliterator(), false)).collect(collector));
+        switch (rows) {
+            case Collection<String[]> collection -> putAll(collection.stream());
+            case null -> {} // Do nothing.
+            default -> putAll(StreamSupport.stream(rows.spliterator(), false));
+        }
+    }
+
+    //==================================================================================================================
+    // Private Helper Methods
+    //==================================================================================================================
+
+    /**
+     * @see #putAll(Map)
+     */
+    private void putAll(Stream<String[]> rows) {
+        putAll(mapper.apply(rows).collect(collector));
     }
 }

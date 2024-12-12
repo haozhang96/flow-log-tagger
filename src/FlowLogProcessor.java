@@ -39,10 +39,10 @@ class FlowLogProcessor implements Runnable, Closeable {
     }
 
     FlowLogProcessor(TableSupplier input, Tags tags, TableConsumer output) {
-        this.input = input;
+        this.input = Objects.requireNonNull(input);
         this.tags = Objects.requireNonNullElse(tags, Constants.TAGS);
-        this.output = output;
-        warmUp(); // This is done only once per JVM start-up, but cannot be done using a static initialization block.
+        this.output = Objects.requireNonNull(output);
+        warmUp();
     }
 
     //==================================================================================================================
@@ -123,6 +123,11 @@ class FlowLogProcessor implements Runnable, Closeable {
         return object instanceof Closeable closeable ? closeable : () -> {};
     }
 
+    /**
+     * Warm up the Java virtual runtime by repeatedly running through "hot spots" to hint to the just-in-time compiler
+     *   to inline certain methods. This is done only once per JVM start-up, but cannot be done using a static
+     *   initialization block due to circular class initialization.
+     */
     private static void warmUp() {
         if (WARMED_UP.compareAndSet(false, true)) {
             try (var processor = new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1000L), TableConsumer.NOOP)) {

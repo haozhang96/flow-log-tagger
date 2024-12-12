@@ -67,7 +67,7 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
         //==============================================================================================================
 
         Iterator(TableSupplier table) {
-            final var stream = this.stream = table.get();
+            final var stream = this.stream = table.get(); // Implicit null check
             CLEANER.register(this, stream::close); // Close the underlying stream when we become garbage-collected.
             delegate = stream.iterator();
         }
