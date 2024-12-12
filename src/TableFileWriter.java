@@ -6,12 +6,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.stream.Stream;
 
 /**
- * This class writes a tabular data file lazily from a {@link Stream} of columns as string arrays.
- * <br/><br/>
+ * This class writes a tabular data file from a {@link Stream} of columns as string arrays.
  *
- * <b>Note:</b> Instances of this class must be used with a
- *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
- *   statement</a> to ensure any underlying resources are properly closed.
+ * @apiNote Instances of this class must be used with a
+ *          <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
+ *          statement</a> to ensure any underlying resources are properly closed.
  */
 non-sealed class TableFileWriter extends AbstractTableFileProcessor implements TableConsumer, Flushable, Closeable {
     private final BufferedWriter writer;

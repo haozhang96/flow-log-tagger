@@ -9,11 +9,10 @@ import java.util.stream.Stream;
 
 /**
  * This class reads a tabular data file lazily into a {@link Stream} of columns as string arrays.
- * <br/><br/>
  *
- * <b>Note:</b> {@link Stream}s created by instances of this class must be used with a
- *   <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
- *   statement</a> to ensure any underlying resources are properly closed.
+ * @apiNote {@link Stream}s created by instances of this class must be used with a
+ *          <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
+ *          statement</a> to ensure any underlying resources are properly closed.
  */
 non-sealed class TableFileReader extends AbstractTableFileProcessor implements TableSupplier {
     private final boolean hasHeaderRow;
@@ -51,12 +50,16 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     // Supplier Implementation Methods
     //==================================================================================================================
 
+    /**
+     * @implNote This method returns a lazy {@link Stream}.
+     */
     @Override
     public Stream<String[]> get() {
         System.out.println("[>] Reading file: " + path);
 
         return lines(path)
-            .skip(hasHeaderRow ? 1L : 0L) // We may use Stream.dropWhile() in the future to skip multiple header rows.
+            .skip(hasHeaderRow ? 1L : 0L) // Skip the first header row if explicitly specified.
+            .dropWhile(TableFileReader::isHeaderRow) // Skip any remaining header rows using heuristics.
             .map(line -> line.split(separator));
     }
 
@@ -87,21 +90,29 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     //==================================================================================================================
 
     /**
-     * Determine whether the first line of a given {@link Path}'s file is the header row by comparing its character
-     *   types.
+     * Determine whether a given {@link Path}'s file has a header row by comparing its first line's character types.
      *
      * @param path The {@link Path} of the file to read the first line of to determine whether it is the header row
      */
     private static boolean hasHeaderRow(Path path) {
         try (var firstLine = lines(path).limit(1L)) {
-            return firstLine
-                .flatMapToInt(String::codePoints)
-                .boxed()
-                .collect(Collectors.teeing(
-                    Collectors.filtering(Character::isAlphabetic, Collectors.counting()),
-                    Collectors.filtering(Character::isDigit, Collectors.counting()),
-                    (letters, digits) -> letters >= digits // Rudimentary but intuitive logic
-                ));
+            return firstLine.allMatch(TableFileReader::isHeaderRow);
         }
+    }
+
+    /**
+     * Determine whether a given line is a header row by comparing its character types.
+     *
+     * @param line The line of a file to determine whether it is the header row
+     */
+    private static boolean isHeaderRow(String line) {
+        return line
+            .codePoints()
+            .boxed()
+            .collect(Collectors.teeing(
+                Collectors.filtering(Character::isAlphabetic, Collectors.counting()),
+                Collectors.filtering(Character::isDigit, Collectors.counting()),
+                (letters, digits) -> letters >= digits // Rudimentary but intuitive heuristic
+            ));
     }
 }

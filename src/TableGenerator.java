@@ -25,6 +25,9 @@ class TableGenerator implements TableSupplier {
     // Supplier Implementation Methods
     //==================================================================================================================
 
+    /**
+     * @implNote This method returns a lazy {@link Stream}.
+     */
     @Override
     public Stream<String[]> get() {
         return Stream

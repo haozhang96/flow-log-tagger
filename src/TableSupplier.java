@@ -3,7 +3,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * This interface defines an object that supplies tabular data lazily into a {@link Stream} of columns as string arrays.
+ * This interface defines an object that supplies tabular data into a {@link Stream} of columns as string arrays.
  * <br/><br/>
  *
  * A {@link TableSupplier} can be used multiple times. {@link Stream}s (and, consequently,
@@ -22,6 +22,14 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
     /**
      * Retrieve a {@link Stream} of the tabular data as string column arrays.
+     *
+     * @return A {@link Stream} of the tabular data as string column arrays
+     *
+     * @apiNote {@link Stream}s retrieved using this method must be used with a
+     *          <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
+     *          statement</a> to ensure any underlying resources are properly closed.
+     * @implSpec Implementers should specify whether this method will return a lazy {@link Stream} constructed from a
+     *           buffering data source. This would help callers prepare for resource demands.
      */
     @Override
     Stream<String[]> get();

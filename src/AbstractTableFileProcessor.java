@@ -51,7 +51,7 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
     private static String inferSeparator(Path path) {
         return inferSeparatorByExtension(path)
             .or(() -> inferSeparatorByFirstLine(path))
-            .orElseGet(() -> Constants.SEPARATORS.get(Constants.UNKNOWN));
+            .orElseGet(() -> Constants.SEPARATORS.get(Constants.UNKNOWN)); // Fall back to the default separator.
     }
 
     /**
