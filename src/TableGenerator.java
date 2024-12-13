@@ -6,8 +6,6 @@ import java.util.stream.Stream;
  * This class generates tabular data lazily into a {@link Stream} of columns as string arrays.
  */
 class TableGenerator implements TableSupplier {
-    private static final Supplier<?>[] NO_COLUMN_GENERATORS = {};
-
     private final long rows;
     private final Supplier<?>[] columnGenerators;
 
@@ -21,7 +19,7 @@ class TableGenerator implements TableSupplier {
 
     TableGenerator(long rows, Supplier<?>... columnGenerators) {
         this.rows = rows;
-        this.columnGenerators = Objects.requireNonNullElse(columnGenerators, NO_COLUMN_GENERATORS);
+        this.columnGenerators = Objects.requireNonNull(columnGenerators);
     }
 
     //==================================================================================================================
@@ -36,7 +34,6 @@ class TableGenerator implements TableSupplier {
         return Stream
             .generate(() -> columnGenerators)
             .limit(rows)
-            .map(Stream::of) // TODO: Can we optimize this to create less streams?
             .map(TableGenerator::generate);
     }
 
@@ -53,10 +50,14 @@ class TableGenerator implements TableSupplier {
     // Private Helper Methods
     //==================================================================================================================
 
-    private static String[] generate(Stream<Supplier<?>> columnGenerators) {
-        return columnGenerators
-            .map(Supplier::get)
-            .map(String::valueOf)
-            .toArray(String[]::new);
+    private static String[] generate(Supplier<?>... columnGenerators) {
+        var columns = new String[columnGenerators.length];
+
+        // Use a simple for-loop instead of a stream to avoid a stream creation for every row.
+        for (int index = 0; index < columns.length; ++index) {
+            columns[index] = String.valueOf(columnGenerators[index].get());
+        }
+
+        return columns;
     }
 }

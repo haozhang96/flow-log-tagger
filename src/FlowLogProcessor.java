@@ -112,7 +112,7 @@ class FlowLogProcessor implements Runnable, Closeable {
 
     private Protocol toProtocol(String[] columns) {
         final var ianaProtocol = Constants.IANA_PROTOCOLS.getOrDefault(columns[PROTOCOL], Protocol.UNKNOWN);
-        return new Protocol(columns[DESTINATION_PORT], ianaProtocol.name());
+        return Protocol.of(columns[DESTINATION_PORT], ianaProtocol.name());
     }
 
     private String getTag(Protocol protocol) {
@@ -129,13 +129,15 @@ class FlowLogProcessor implements Runnable, Closeable {
      *   initialization block due to circular class initialization.
      */
     private static void warmUp() {
-        if (WARMED_UP.compareAndSet(false, true)) {
-            try (var processor = new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1000L), TableConsumer.NOOP)) {
-                System.out.println("[!] Warming up the Java virtual machine...");
-                processor.run();
-            } catch (IOException exception) {
-                // We don't care; this is only a warm-up.
-            }
+        if (!WARMED_UP.compareAndSet(false, true)) {
+            return;
+        }
+
+        try (var processor = new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1 << 10), TableConsumer.NOOP)) {
+            System.out.println("[!] Warming up the Java virtual machine...");
+            processor.run();
+        } catch (IOException exception) {
+            // We don't care; this is only a warm-up.
         }
     }
 }

@@ -40,14 +40,15 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 
 ## Considerations
 * This project was written for standalone compilation and execution on any system meeting the outlined requirements
-  without requiring a build tool (e.g. Maven or Gradle) or external libraries.
-* Parallel processing is used where possible.
-* Data streaming is used for memory constraints where possible.
+  without requiring a build tool (e.g., Maven or Gradle) or external libraries.
+* Parallel processing was used for faster execution where possible.
+* Data streaming was used for memory constraints where possible.
+* Caching was used to minimize garbage collection where possible.
 * Hash-based comparisons were used for performant lookups where possible.
 
 ## Design Choices
 * `java.util.Objects.requireNonNull(...)` was used for runtime null-checking to avoid external dependencies required for
-  compile-time null-checking, such as annotations from external dependencies (e.g., `javax.annotation.Nonnull`).
+  compile-time null-checking, such as external annotations (e.g., `javax.annotation.Nonnull`).
 * `java.lang.System.out` was used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
   verbose information logged to the console.
 

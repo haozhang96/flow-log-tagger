@@ -6,6 +6,10 @@ import java.util.stream.StreamSupport;
 
 /**
  * This interface defines an object that consumes tabular data from a {@link Iterable} of columns as string arrays.
+ *
+ * @implNote This interface originally consumed {@link Stream}s, but the overhead of creating {@link Stream}s for its
+ *           use was far too high. Additionally, consuming {@link Iterable}s instead of {@link Stream}s has the
+ *           advantage of accepting more common types such as {@link Collection}s.
  */
 @FunctionalInterface
 interface TableConsumer extends Consumer<Iterable<String[]>> {
@@ -25,7 +29,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(Object... columns) {
-        return invoke(this::row, this::toString, columns);
+        return apply(this::row, this::toString, columns);
     }
 
     /**
@@ -35,7 +39,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(String... columns) {
-        return invoke(this::row, Arrays::asList, columns);
+        return apply(this::row, Arrays::asList, columns);
     }
 
     /**
@@ -45,7 +49,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(Stream<String> columns) {
-        return invoke(this::row, Stream::toList, columns);
+        return apply(this::row, Stream::toList, columns);
     }
 
     /**
@@ -55,7 +59,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer row(Iterable<String> columns) {
-        return invoke(this::rows, Collections::singletonList, toArray(columns));
+        return apply(this::rows, Collections::singletonList, toArray(columns));
     }
 
     /**
@@ -65,7 +69,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer rows(Object[]... rows) {
-        return invoke(this::rows, array -> Stream.of(array).map(this::toString).map(this::toArray).toList(), rows);
+        return apply(this::rows, array -> Stream.of(array).map(this::toString).map(this::toArray).toList(), rows);
     }
 
     /**
@@ -75,7 +79,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer rows(String[]... rows) {
-        return invoke(this::rows, Arrays::asList, rows);
+        return apply(this::rows, Arrays::asList, rows);
     }
 
     /**
@@ -85,7 +89,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @return The same {@link TableConsumer} for chaining
      */
     default TableConsumer rows(Stream<String[]> rows) {
-        return invoke(this::rows, Stream::toList, rows);
+        return apply(this::rows, Stream::toList, rows);
     }
 
     /**
@@ -126,6 +130,8 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @param array The array of {@link Object}s to convert into a {@link Stream} of {@link String}s
      */
     private Iterable<String> toString(Object[] array) {
+        // We could use a simple for-loop to avoid stream creations, but calling this method is not common enough of an
+        //   occurrence to make doing so worthwhile.
         return Stream
             .of(array)
             .map(String::valueOf)
@@ -133,26 +139,27 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
     }
 
     /**
-     * Convert a given {@link Stream} of {@link String}s into an array of {@link String}s.
+     * Convert a given {@link Iterable} of {@link String}s into an array of {@link String}s.
      *
-     * @param iterable The {@link Stream} of {@link String}s to convert into an array of {@link String}s
+     * @param iterable The {@link Iterable} of {@link String}s to convert into an array of {@link String}s
      */
     private String[] toArray(Iterable<String> iterable) {
         return switch (iterable) {
             case Collection<String> collection -> collection.toArray(String[]::new);
-            case null -> new String[0]; // This is not enough of an occurrence to worry about repeated allocations.
+            case null -> new String[0]; // This is not common enough of an occurrence to worry about allocations.
             default -> StreamSupport.stream(iterable.spliterator(), false).toArray(String[]::new);
         };
     }
 
-    private static <T, E, R> R invoke(
-        Function<? super Iterable<E>, R> method,
+    private static <T, E, R> R apply(
+        Function<? super Iterable<E>, ? extends R> method,
         Function<? super T, ? extends Iterable<E>> mapper,
         T input
     ) {
         return Optional
             .ofNullable(input)
-            .map(method.compose(mapper))
+            .map(mapper)
+            .<R>map(method)
             .orElseGet(() -> method.apply(List.of()));
     }
 }

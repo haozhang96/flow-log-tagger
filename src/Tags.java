@@ -30,7 +30,7 @@ class Tags extends TableMap<Protocol, String> {
     private static final int PROTOCOL = 1;
     private static final int TAG = 2;
     private static final Collector<String[], ?, Map<Protocol, String>> COLLECTOR =
-        Collectors.toMap(columns -> new Protocol(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG]);
+        Collectors.toMap(columns -> Protocol.of(columns[PORT], columns[PROTOCOL]), columns -> columns[TAG]);
 
     //==================================================================================================================
     // Constructors

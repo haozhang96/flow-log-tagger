@@ -1,6 +1,9 @@
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * This class defines a protocol with a port number and a name.
@@ -13,27 +16,55 @@ import java.util.HashSet;
  * @param name The name of the protocol
  */
 record Protocol(int port, String name) implements Comparable<Protocol> {
-    /**
-     * A sentinel value for an unknown protocol
-     */
-    static final Protocol UNKNOWN = new Protocol(0, Constants.UNKNOWN);
-
+    private static final ConcurrentMap<Integer, Protocol> CACHE = new ConcurrentHashMap<>(1 << 16);
     private static final Comparator<Protocol> COMPARATOR =
         Comparator
             .comparingInt(Protocol::port)
             .thenComparing(Protocol::name);
 
+    /**
+     * A sentinel value for an unknown protocol
+     */
+    static final Protocol UNKNOWN = of(0, Constants.UNKNOWN);
+
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    Protocol(String port, String name) {
-        this(Integer.parseInt(port), name);
-    }
-
+    /**
+     * @apiNote Use {@link #of(int, String)} instead to take advantage of caching.
+     */
     Protocol(int port, String name) {
         this.port = port;
         this.name = name.toLowerCase(); // Implicit null check
+    }
+
+    //==================================================================================================================
+    // Factory Methods
+    //==================================================================================================================
+
+    /**
+     * Retrieve an instance of {@link Protocol} corresponding to a given port and name.
+     *
+     * @param port The port of the {@link Protocol} to retrieve
+     * @param name The name of the {@link Protocol} to retrieve
+     * @return A potentially cached instance of {@link Protocol} corresponding to the given port and name
+     */
+    static Protocol of(String port, String name) {
+        return of(Integer.parseInt(port), name);
+    }
+
+    /**
+     * Retrieve an instance of {@link Protocol} corresponding to a given port and name.
+     *
+     * @param port The port of the {@link Protocol} to retrieve
+     * @param name The name of the {@link Protocol} to retrieve
+     * @return A potentially cached instance of {@link Protocol} corresponding to the given port and name
+     */
+    static Protocol of(int port, String name) {
+        // Cache instances using the computed hash of the arguments.
+        // TODO: Implement soft-reference-based caching or an eviction policy for the current cache instead.
+        return CACHE.computeIfAbsent(Objects.hash(port, name.toLowerCase()), ignored -> new Protocol(port, name));
     }
 
     //==================================================================================================================

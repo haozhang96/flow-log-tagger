@@ -4,10 +4,10 @@ import java.util.stream.Stream;
 
 /**
  * This interface defines an object that supplies tabular data into a {@link Stream} of columns as string arrays.
- * <br/><br/>
  *
- * A {@link TableSupplier} can be used multiple times. {@link Stream}s (and, consequently,
- *   {@link java.util.Iterator Iterator}s) retrieved from a {@link TableSupplier} are independent of one another.
+ * @apiNote A {@link TableSupplier} can be used multiple times. {@link Stream}s (and, consequently,
+ *          {@link java.util.Iterator Iterator}s) retrieved from a {@link TableSupplier} are independent of one another.
+ * @implNote This interface supplies {@link Stream}s instead of {@link Iterable}s to allow lazy data generation.
  */
 @FunctionalInterface
 interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {

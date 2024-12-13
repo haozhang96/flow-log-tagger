@@ -34,7 +34,7 @@ class IANAProtocols extends TableMap<String, Protocol> {
     private static final UnaryOperator<Stream<String[]>> MAPPER =
         rows -> rows.filter(columns -> columns[DECIMAL].codePoints().allMatch(Character::isDigit));
     private static final Collector<String[], ?, Map<String, Protocol>> COLLECTOR =
-        Collectors.toMap(columns -> columns[DECIMAL], columns -> new Protocol(columns[DECIMAL], columns[KEYWORD]));
+        Collectors.toMap(columns -> columns[DECIMAL], columns -> Protocol.of(columns[DECIMAL], columns[KEYWORD]));
 
     //==================================================================================================================
     // Constructors

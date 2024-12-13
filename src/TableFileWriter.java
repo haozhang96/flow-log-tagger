@@ -54,14 +54,14 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
 
     @Override
     public void accept(Iterable<String[]> rows) {
-        rows.forEach(columns -> {
+        for (final var columns : rows) {
             // Write the row and line separator in a single call to ensure that the line separator immediately follows.
             try {
                 writer.write(String.join(separator, columns) + System.lineSeparator());
             } catch (IOException exception) {
                 throw new UncheckedIOException("Failed to write to file: " + path, exception);
             }
-        });
+        }
     }
 
     //==================================================================================================================
@@ -82,6 +82,7 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
         try {
             writer.close();
         } finally {
+            // We wouldn't know for sure whether anything was written at this point, but this assumption is most likely.
             System.out.println("[<] Wrote file: " + path);
         }
     }
