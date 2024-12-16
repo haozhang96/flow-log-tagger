@@ -55,7 +55,7 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
     public void accept(Iterable<String[]> rows) {
         switch (rows) {
             case Collection<String[]> collection -> putAll(collection.stream());
-            case null -> {} // Do nothing.
+            case null -> { } // Do nothing.
             default -> putAll(StreamSupport.stream(rows.spliterator(), false));
         }
     }
