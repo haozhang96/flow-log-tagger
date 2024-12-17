@@ -1,9 +1,9 @@
-import java.io.Closeable;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * This class calculates certain statistics for a flow log based on mappings of its {@link Protocol}s to {@link Tags}.
  */
-class FlowLogProcessor implements Runnable, Closeable {
+class FlowLogProcessor implements Runnable {
     private static final AtomicBoolean WARMED_UP = new AtomicBoolean();
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
@@ -25,8 +25,8 @@ class FlowLogProcessor implements Runnable, Closeable {
     private final TableConsumer debug = Settings.DEBUG ? new TableFileWriter(Constants.DEBUG_PATH) : TableConsumer.NOOP;
     private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> countingCollector =
         Collectors.teeing(
-            Collectors.groupingByConcurrent(this::getTag, Collectors.counting()),
-            Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()),
+            Collectors.groupingByConcurrent(this::getTag, ConcurrentSkipListMap::new, Collectors.counting()),
+            Collectors.groupingByConcurrent(Function.identity(), ConcurrentSkipListMap::new, Collectors.counting()),
             Map::entry // We're simply using this as a pair/2-tuple. This becomes infeasible with more data points.
         );
 
@@ -53,11 +53,10 @@ class FlowLogProcessor implements Runnable, Closeable {
     public void run() {
         final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
+        final Consumer<String[]> rowCounter = Settings.DEBUG ? ignored -> rowCount.incrementAndGet() : ignored -> { };
         System.out.format("[%%] Processing %s...%n", input);
 
         try (var rows = input.get()) {
-            final Consumer<String[]> rowCounter =
-                Settings.DEBUG ? ignored -> rowCount.incrementAndGet() : ignored -> {};
             final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
                 rows
                     .parallel()
@@ -66,10 +65,22 @@ class FlowLogProcessor implements Runnable, Closeable {
                     .map(this::toProtocol)
                     .collect(countingCollector);
 
-            writeTags(counts.getKey());
-            output.row();
-            writeCombinations(counts.getValue());
+            output
+                .row("Tag Counts:")
+                .row("Tag", "Count");
+            counts
+                .getKey()
+                .forEach(this::writeTags);
+            output
+                .row()
+                .row("Port/Protocol Combination Counts:")
+                .row("Port", "Protocol", "Count");
+            counts
+                .getValue()
+                .forEach(this::writeCombinations);
         } finally {
+            releaseResources();
+
             final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
             if (Settings.DEBUG) {
                 final var size = rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE;
@@ -81,33 +92,16 @@ class FlowLogProcessor implements Runnable, Closeable {
     }
 
     //==================================================================================================================
-    // AutoCloseable Implementation Methods
-    //==================================================================================================================
-
-    @Override
-    @SuppressWarnings({"unused", "EmptyTryBlock"})
-    public void close() throws IOException {
-        try (var output = toCloseable(this.output); var debug = toCloseable(this.debug)) {
-            // We use this try-with-resources statement to ensure all resources are closed regardless of exceptions.
-        }
-    }
-
-    //==================================================================================================================
     // Private Helper Methods
     //==================================================================================================================
 
-    private void writeTags(Map<String, Long> tags) {
-        output
-            .row("Tag Counts:")
-            .row("Tag", "Count");
-        tags.forEach((tag, count) -> output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, count));
+    private void writeTags(String tag, long count) {
+        output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, count);
     }
 
-    private void writeCombinations(Map<Protocol, Long> combinations) {
-        output
-            .row("Port/Protocol Combination Counts:")
-            .row("Port", "Protocol", "Count");
-        combinations.forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), count));
+    private void writeCombinations(Protocol protocol, long count) {
+        // Call the string-only overloaded version of the method to avoid stream creations.
+        output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
     }
 
     private Protocol toProtocol(String[] columns) {
@@ -119,8 +113,18 @@ class FlowLogProcessor implements Runnable, Closeable {
         return tags.getOrDefault(protocol, Protocol.UNKNOWN.name());
     }
 
-    private static Closeable toCloseable(Object object) {
-        return object instanceof Closeable closeable ? closeable : () -> {};
+    private void releaseResources() {
+        for (final var resource : List.of(input, output, debug)) {
+            if (!(resource instanceof AutoCloseable closeable)) {
+                continue;
+            }
+
+            try {
+                closeable.close();
+            } catch (Exception exception) {
+                // Ignore and continue closing the rest of the resources.
+            }
+        }
     }
 
     /**
@@ -129,15 +133,9 @@ class FlowLogProcessor implements Runnable, Closeable {
      *   initialization block due to circular class initialization.
      */
     private static void warmUp() {
-        if (!WARMED_UP.compareAndSet(false, true)) {
-            return;
-        }
-
-        try (var processor = new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1 << 10), TableConsumer.NOOP)) {
+        if (WARMED_UP.compareAndSet(false, true)) {
             System.out.println("[!] Warming up the Java virtual machine...");
-            processor.run();
-        } catch (IOException exception) {
-            // We don't care; this is only a warm-up.
+            new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1 << 10), TableConsumer.NOOP).run();
         }
     }
 }

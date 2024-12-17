@@ -63,8 +63,11 @@ record Protocol(int port, String name) implements Comparable<Protocol> {
      */
     static Protocol of(int port, String name) {
         // Cache instances using the computed hash of the arguments.
-        // TODO: Implement soft-reference-based caching or an eviction policy for the current cache instead.
         return CACHE.computeIfAbsent(Objects.hash(port, name.toLowerCase()), ignored -> new Protocol(port, name));
+
+        // TODO: Implement soft-reference-value-based caching or an eviction policy for the current cache instead. This
+        //   would require weighing memory constraints against processing time constraints. Currently, we prefer faster
+        //   processing times.
     }
 
     //==================================================================================================================
