@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
  * This abstract class implements the foundational logic shared between {@link TableFileReader} and
  *   {@link TableFileWriter}.
  */
-sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableFileWriter {
+sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableFileWriter, AbstractTableFileProcessorTest.Target {
     final Path path;
     final String separator;
 

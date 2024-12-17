@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class BaseUnitTestTest extends BaseUnitTest {
+class BaseUnitTestTest extends BaseUnitTest {
     private static final String MESSAGE = "Unexpected assertion failure";
     private static final Supplier<String> MESSAGE_SUPPLIER = () -> MESSAGE;
 

@@ -2,7 +2,7 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class TableConsumerTest extends BaseUnitTest {
+class TableConsumerTest extends BaseUnitTest {
     private static final TableConsumer TARGET = TableConsumerTest::assertRows;
 
     static final Object[][] OBJECT_ROWS = {{"column 1", 2, 3L, 4D, 5F, (byte) 6, (char) 7, true}};
