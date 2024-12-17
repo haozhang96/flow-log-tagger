@@ -100,7 +100,7 @@ class FlowLogProcessor implements Runnable {
     }
 
     private void writeCombinations(Protocol protocol, long count) {
-        // Call the string-only overloaded version of the method to avoid stream creations.
+        // Invoke the string-only overloaded version of the method to avoid stream creations.
         output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
     }
 

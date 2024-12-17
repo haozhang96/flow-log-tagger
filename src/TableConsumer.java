@@ -130,8 +130,8 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @param array The array of {@link Object}s to convert into a {@link Stream} of {@link String}s
      */
     private Iterable<String> toString(Object[] array) {
-        // We could use a simple for-loop to avoid stream creations, but this method is called enough to make doing so
-        //   worthwhile.
+        // We could use a simple for-loop to avoid stream creations, but this method isn't invoked enough to make doing
+        //   so worthwhile.
         return Stream
             .of(array)
             .map(String::valueOf)
