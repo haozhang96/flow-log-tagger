@@ -1,4 +1,6 @@
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -35,6 +37,16 @@ class TableGenerator implements TableSupplier {
             .generate(() -> columnGenerators)
             .limit(rows)
             .map(TableGenerator::generate);
+    }
+
+    //==================================================================================================================
+    // Iterable Implementation Methods
+    //==================================================================================================================
+
+    @Override
+    public Spliterator<String[]> spliterator() {
+        return Spliterators
+            .spliterator(iterator(), rows, Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE);
     }
 
     //==================================================================================================================

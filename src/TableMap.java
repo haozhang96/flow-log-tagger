@@ -1,5 +1,4 @@
 import java.io.Serial;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,7 +6,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * This class is an abstract implementation of {@link ConcurrentMap} that uses a {@link TableSupplier} to build its
@@ -53,11 +51,7 @@ abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableCo
 
     @Override
     public void accept(Iterable<String[]> rows) {
-        switch (rows) {
-            case Collection<String[]> collection -> putAll(collection.stream());
-            case null -> { } // Do nothing.
-            default -> putAll(StreamSupport.stream(rows.spliterator(), false));
-        }
+        putAll(Utils.stream(rows));
     }
 
     //==================================================================================================================

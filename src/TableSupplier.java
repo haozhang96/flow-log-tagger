@@ -1,4 +1,6 @@
 import java.lang.ref.Cleaner;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -39,11 +41,20 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
     //==================================================================================================================
 
     /**
-     * Retrieve an {@link Iterator} of the tabular data as string column arrays.
+     * Retrieve an {@link java.util.Iterator Iterator} of the tabular data as string column arrays.
      */
     @Override
     default Iterator iterator() {
         return new Iterator(this);
+    }
+
+    /**
+     * Retrieve a {@link Spliterator} of the tabular data as string column arrays.
+     */
+    @Override
+    default Spliterator<String[]> spliterator() {
+        // Use java.nio.file.FileChannelLinesSpliterator as reference for the spliterator's characteristics.
+        return Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED | Spliterator.NONNULL);
     }
 
     //==================================================================================================================
@@ -59,17 +70,17 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
     class Iterator implements java.util.Iterator<String[]>, AutoCloseable {
         private static final Cleaner CLEANER = Cleaner.create();
 
-        private final Stream<String[]> stream;
         private final java.util.Iterator<String[]> delegate;
+        private final Cleaner.Cleanable cleanable;
 
         //==============================================================================================================
         // Constructors
         //==============================================================================================================
 
-        Iterator(TableSupplier table) {
-            final var stream = this.stream = table.get(); // Implicit null check
-            CLEANER.register(this, stream::close); // Close the underlying stream when we become garbage-collected.
+        private Iterator(TableSupplier table) {
+            final var stream = table.get(); // Implicit null check
             delegate = stream.iterator();
+            cleanable = CLEANER.register(this, stream::close); // Close the stream when we become garbage-collected.
         }
 
         //==============================================================================================================
@@ -97,7 +108,7 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
         public void close() {
             // Only close the underlying stream at the end of iteration; the cleaner will handle incomplete iterations.
             if (!hasNext()) {
-                stream.close();
+                cleanable.clean();
             }
         }
     }

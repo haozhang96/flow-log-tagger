@@ -2,7 +2,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * This interface defines an object that consumes tabular data from a {@link Iterable} of columns as string arrays.
@@ -144,11 +143,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      * @param iterable The {@link Iterable} of {@link String}s to convert into an array of {@link String}s
      */
     private String[] toArray(Iterable<String> iterable) {
-        return switch (iterable) {
-            case Collection<String> collection -> collection.toArray(String[]::new);
-            case null -> new String[0]; // This is not common enough of an occurrence to worry about allocations.
-            default -> StreamSupport.stream(iterable.spliterator(), false).toArray(String[]::new);
-        };
+        return Utils.toArray(iterable, String[]::new);
     }
 
     private static <T, E, R> R apply(
