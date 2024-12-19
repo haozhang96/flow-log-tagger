@@ -1,6 +1,5 @@
 import java.util.Arrays;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 class TableConsumerTest extends BaseUnitTest {
     private static final TableConsumer TARGET = TableConsumerTest::assertRows;
@@ -69,10 +68,10 @@ class TableConsumerTest extends BaseUnitTest {
     //==================================================================================================================
 
     private static void assertRows(Iterable<String[]> rows) {
-        final var rows$ = StreamSupport.stream(rows.spliterator(), false).toArray();
+        final var rows$ = Utils.toArray(rows, String[][]::new);
         assert$(
             Arrays.deepEquals(rows$, STRING_ROWS),
-            () -> "expected=%s, given=%s".formatted(Arrays.deepToString(STRING_ROWS), Arrays.deepToString(rows$))
+            () -> "Unexpected rows: expected=%s, given=%s".formatted(Arrays.deepToString(STRING_ROWS), Arrays.deepToString(rows$))
         );
     }
 }

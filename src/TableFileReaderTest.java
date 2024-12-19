@@ -1,9 +1,7 @@
-import java.nio.file.Path;
+import java.util.Spliterators;
 
-class AbstractTableFileProcessorTest extends BaseUnitTest {
-    private static final Path PATH = Constants.DATA_DIRECTORY;
-    private static final String SEPARATOR = Constants.SEPARATORS.get("csv");
-    private static final AbstractTableFileProcessor TARGET = new Target(PATH, SEPARATOR);
+class TableFileReaderTest extends BaseUnitTest {
+    private static final TableFileReader TARGET = new TableFileReader(Constants.INPUT_PATH);
 
     //==================================================================================================================
     // Bootstrap
@@ -18,19 +16,25 @@ class AbstractTableFileProcessorTest extends BaseUnitTest {
     //==================================================================================================================
 
     @Test
-    void toString_shouldContainPathAndSeparator() {
-        final var toString = TARGET.toString();
-        assert$(toString.contains(PATH.toString()), "toString() should contain the path: " + PATH);
-        assert$(toString.contains(SEPARATOR), "toString() should contain the separator: " + SEPARATOR);
+    void get_shouldReturnStreamWithExpectedRowCount() {
+        assertRows(TARGET.get().count());
+    }
+
+    @Test
+    void iterator_shouldReturnStreamWithExpectedRowCount() {
+        assertRows(Utils.stream(Spliterators.spliteratorUnknownSize(TARGET.iterator(), 0)).count());
+    }
+
+    @Test
+    void spliterator_shouldReturnStreamWithExpectedRowCount() {
+        assertRows(Utils.stream(TARGET.spliterator()).count());
     }
 
     //==================================================================================================================
     // Assertion Helpers
     //==================================================================================================================
 
-    static final class Target extends AbstractTableFileProcessor {
-        Target(Path path, String separator) {
-            super(path, separator);
-        }
+    private static void assertRows(long rows) {
+        assert$(rows != 0L, "Expected at least one row");
     }
 }

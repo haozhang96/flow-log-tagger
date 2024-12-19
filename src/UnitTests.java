@@ -1,12 +1,15 @@
 import java.util.Collection;
 import java.util.List;
 
-class UnitTests extends BaseUnitTest {
-    private static final Collection<Class<? extends BaseUnitTest>> UNIT_TEST_CLASSES =
+public class UnitTests extends BaseUnitTest {
+    private static final Collection<Class<? extends BaseUnitTest>> TARGETS =
         List.of(
             BaseUnitTestTest.class,
+            TableConsumerTest.class,
+            TableSupplierTest.class,
             AbstractTableFileProcessorTest.class,
-            TableConsumerTest.class
+            TableFileReaderTest.class,
+            FlowLogGeneratorTest.class
         );
 
     //==================================================================================================================
@@ -14,6 +17,6 @@ class UnitTests extends BaseUnitTest {
     //==================================================================================================================
 
     public static void main(String[] args) {
-        UNIT_TEST_CLASSES.forEach(BaseUnitTest::run);
+        TARGETS.forEach(BaseUnitTest::run);
     }
 }
