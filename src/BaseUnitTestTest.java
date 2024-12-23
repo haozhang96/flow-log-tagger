@@ -76,11 +76,7 @@ class BaseUnitTestTest extends BaseUnitTest {
                         .of(table)
                         .map(Arrays::asList)
                         .anyMatch(Arrays.asList(columns)::equals),
-                    () ->
-                        "A slice of %s should be produced: %s".formatted(
-                            Arrays.deepToString(table),
-                            Arrays.toString(columns)
-                        )
+                    () -> "A slice of %s should be produced: %s".formatted(toString(table), toString(columns))
                 );
             });
         }

@@ -7,13 +7,16 @@ public class UnitTests extends BaseUnitTest {
             BaseUnitTestTest.class,
             TableConsumerTest.class,
             TableSupplierTest.class,
+            TableMapTest.class,
             AbstractTableFileProcessorTest.class,
             TableFileReaderTest.class,
-            FlowLogGeneratorTest.class,
+            TableFileWriterTest.class,
+            TableGeneratorTest.class,
             ProtocolTest.class,
             IANAProtocolsTest.class,
             TagsTest.class,
-            UtilsTest.class
+            UtilsTest.class,
+            FlowLogGeneratorTest.class
         );
 
     //==================================================================================================================

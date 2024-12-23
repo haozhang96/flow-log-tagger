@@ -1,10 +1,13 @@
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
 class TableConsumerTest extends BaseUnitTest {
     private static final TableConsumer TARGET = TableConsumerTest::assertRows;
 
-    static final Object[][] OBJECT_ROWS = {{"column 1", 2, 3L, 4D, 5F, (byte) 6, (char) 7, true}};
+    static final Object[][] OBJECT_ROWS =
+        {{"column 1", 2, 3L, 4D, 5F, (byte) 6, (char) 7, BigInteger.valueOf(8L), BigDecimal.valueOf(9D), true}};
     static final String[][] STRING_ROWS =
         Stream
             .of(OBJECT_ROWS)
@@ -70,8 +73,8 @@ class TableConsumerTest extends BaseUnitTest {
     private static void assertRows(Iterable<String[]> rows) {
         final var rows$ = Utils.toArray(rows, String[][]::new);
         assert$(
-            Arrays.deepEquals(rows$, STRING_ROWS),
-            () -> "Unexpected rows: expected=%s, given=%s".formatted(Arrays.deepToString(STRING_ROWS), Arrays.deepToString(rows$))
+            equals(rows$, STRING_ROWS),
+            () -> "Unexpected rows: expected=%s, given=%s".formatted(toString(STRING_ROWS), toString(rows$))
         );
     }
 }

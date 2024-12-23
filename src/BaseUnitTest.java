@@ -9,6 +9,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -221,6 +222,20 @@ abstract class BaseUnitTest {
                 default -> handler != null ? handler.invoke(proxy, method, args) : null;
             }
         ));
+    }
+
+    /**
+     * @see Arrays#deepToString(Object[])
+     */
+    static String toString(Object[] array) {
+        return Arrays.deepToString(array);
+    }
+
+    /**
+     * @see Arrays#deepEquals(Object[], Object[])
+     */
+    static boolean equals(Object[] a, Object[] b) {
+        return Arrays.deepEquals(a, b);
     }
 
     //==================================================================================================================
