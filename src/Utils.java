@@ -18,7 +18,11 @@ interface Utils {
      * @see StreamSupport#stream(Spliterator, boolean)
      */
     static <T> Stream<T> stream(Iterable<T> iterable) {
-        return iterable instanceof Collection<T> collection ? collection.stream() : stream(iterable.spliterator());
+        return switch (iterable) {
+            case Collection<T> collection -> collection.stream();
+            case null -> Stream.empty();
+            default -> stream(iterable.spliterator());
+        };
     }
 
     /**
