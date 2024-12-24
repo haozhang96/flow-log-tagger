@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 
 /**
  * This class is a minimal implementation of a testing harness that does not require external testing dependencies
@@ -26,8 +25,6 @@ abstract class BaseUnitTest {
     private static final StackWalker STACK_WALKER = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
     private static final Unsafe UNSAFE = getUnsafe();
     private static final String HORIZONTAL_RULE = "=".repeat(100);
-
-    final Logger logger = Logger.getLogger(getClass().getName()); // For test classes to use, if they wish
 
     //==================================================================================================================
     // Test Support
@@ -81,9 +78,9 @@ abstract class BaseUnitTest {
      * @see Test @Test
      */
     static void run(Class<?> testClass) {
-        final var testInstance = stub(testClass);
+        final var testInstance = instantiate(testClass);
         final var failures = new ArrayList<Throwable>();
-        System.out.println(HORIZONTAL_RULE);
+        Loggers.INFO.accept(HORIZONTAL_RULE);
 
         for (final var method : testClass.getDeclaredMethods()) {
             if (!method.isAnnotationPresent(Test.class)) {
@@ -91,24 +88,24 @@ abstract class BaseUnitTest {
             }
 
             try {
-                System.out.format("[@] Running test: %s%n", method);
+                Loggers.INFO.accept("[@] Running test: " + method);
                 MethodHandles
                     .privateLookupIn(testClass, LOOKUP)
                     .unreflect(method)
                     .bindTo(testInstance)
                     .invoke();
-                System.out.format("[^] Test passed: %s%n", method);
+                Loggers.INFO.accept("[^] Test passed: " + method);
             } catch (Throwable cause) {
-                System.err.format("[!] Test %s: %s%n", cause instanceof AssertionError ? "assertion failure" : "error", method);
-                cause.printStackTrace(System.err);
+                final var status = cause instanceof AssertionError ? "assertion failure" : "error";
+                Loggers.ERROR.accept("[!] Test %s: %s".formatted(status, method), cause);
                 failures.add(cause);
             } finally {
-                System.out.println(HORIZONTAL_RULE);
+                Loggers.INFO.accept(HORIZONTAL_RULE);
             }
         }
 
         switch (failures.size()) {
-            case 0 -> System.out.println("[^] All tests passed: " + testClass.getSimpleName());
+            case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testClass.getSimpleName());
             case 1 -> UNSAFE.throwException(failures.getFirst());
             default -> throw new AssertionError("[!] Multiple test failures: " + failures);
         }
@@ -162,35 +159,24 @@ abstract class BaseUnitTest {
     }
 
     /**
-     * Construct a potentially stubbed instance of a given type.
+     * Construct an instance of a given type.
      *
-     * @param type The type to construct the potentially stubbed instance of
-     * @param <T> The type to construct the potentially stubbed instance of
+     * @param type The type to construct the instance of
+     * @param <T> The type to construct the instance of
      */
-    static <T> T stub(Class<T> type) {
-        return stub(type, !type.isInterface() ? null : (proxy, method, args) -> {
-            try {
-                return stub(method.getReturnType());
-            } catch (Throwable cause) {
-                return null;
-            }
-        });
-    }
-
-    /**
-     * Construct a potentially stubbed instance of a given type, using a given {@link InvocationHandler} to handle calls
-     *   for an interface type, if given.
-     *
-     * @param type The type to construct the potentially stubbed instance of
-     * @param handler The {@link InvocationHandler} to use to handle calls for an interface type, if given
-     * @param <T> The type to construct the potentially stubbed instance of
-     */
-    static <T> T stub(Class<T> type, InvocationHandler handler) {
-        if (!type.isInterface() && handler != null) {
-            throw new IllegalArgumentException("Only interfaces can use an invocation handler: " + type.getTypeName());
-        } else if (type.isPrimitive()) {
+    static <T> T instantiate(Class<T> type) {
+        if (type.isPrimitive()) {
             // Use default values for primitive types.
             return type.cast(Array.get(Array.newInstance(type, 1), 0));
+        } else if (type.isInterface()) {
+            // Use reflective proxies for interface types.
+            return mock(type, (proxy, method, args) -> {
+                try {
+                    return instantiate(method.getReturnType());
+                } catch (Throwable cause) {
+                    return null;
+                }
+            });
         }
 
         // Try invoking the default constructor.
@@ -207,12 +193,27 @@ abstract class BaseUnitTest {
         try {
             return type.cast(UNSAFE.allocateInstance(type));
         } catch (ReflectiveOperationException exception) {
-            if (!type.isInterface()) {
-                UNSAFE.throwException(Objects.requireNonNullElse(exception.getCause(), exception));
-            }
+            // Propagate the exception.
+            UNSAFE.throwException(Objects.requireNonNullElse(exception.getCause(), exception));
         }
 
-        // Try using a proxy for interfaces.
+        // This is unreachable, but we must satisfy the compiler.
+        return type.cast(UNSAFE);
+    }
+
+    /**
+     * Construct a mock instance of a given interface type, using a given {@link InvocationHandler} to handle its method
+     *   calls.
+     *
+     * @param type The interface type to construct the mock instance of
+     * @param handler The {@link InvocationHandler} to use to handle calls for the mock instance
+     * @param <T> The interface type to construct the mock instance of
+     */
+    static <T> T mock(Class<T> type, InvocationHandler handler) {
+        if (!type.isInterface()) {
+            throw new IllegalArgumentException("Only interfaces can be mocked: " + type.getTypeName());
+        }
+
         return type.cast(Proxy.newProxyInstance(CLASS_LOADER, new Class<?>[] {type}, (proxy, method, args) ->
             switch (method.getName()) {
                 case "equals" -> proxy == args[0];

@@ -62,28 +62,45 @@ class BaseUnitTestTest extends BaseUnitTest {
     }
 
     @Test
-    void stub_givenInterface_willCreateStubCorrectly() {
+    void instantiate_givenConcreteClass_willCreateInstanceCorrectly() {
+        assert$(instantiate(TableGenerator.class).get().findAny().isEmpty(), "Expected an empty but valid stream");
+    }
+
+    @Test
+    void instantiate_givenInterface_willCreateInstanceCorrectly() {
+        assert$(instantiate(TableSupplier.class).get().findAny().isEmpty(), "Expected an empty but valid stream");
+    }
+
+    @Test
+    void mock_givenConcreteClass_willThrowIllegalArgumentException() {
+        try {
+            mock(TableGenerator.class, InvocationHandler::invokeDefault);
+        } catch (IllegalArgumentException exception) {
+            return;
+        }
+
+        assert$(false, "Expected an exception to be thrown for invalid interface type");
+    }
+
+    @Test
+    void mock_givenInterface_willCreateMockInstanceCorrectly() {
         final var table = TableConsumerTest.STRING_ROWS;
         final InvocationHandler handler =
-            (proxy, method, args) -> method.getName().equals("get") ? Stream.of(table) : stub(method.getReturnType());
+            (proxy, method, args) ->
+                method.getName().equals("get") ? Stream.of(table) : instantiate(method.getReturnType());
 
-        try (var rows = stub(TableSupplier.class, handler).iterator()) {
+        try (var rows = mock(TableSupplier.class, handler).iterator()) {
             rows.forEachRemaining(columns -> {
-                System.out.println(Arrays.toString(columns));
+                Loggers.INFO.accept(Arrays.toString(columns));
 
                 assert$(
                     Stream
                         .of(table)
                         .map(Arrays::asList)
                         .anyMatch(Arrays.asList(columns)::equals),
-                    () -> "A slice of %s should be produced: %s".formatted(toString(table), toString(columns))
+                    () -> "Expected a subsequence of %s: %s".formatted(toString(table), toString(columns))
                 );
             });
         }
-    }
-
-    @Test
-    void stub_givenConcreteClass_willCreateStubCorrectly() {
-        assert$(stub(TableGenerator.class).get().findAny().isEmpty(), "An empty but valid stream should be produced.");
     }
 }
