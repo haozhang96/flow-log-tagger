@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class calculates certain statistics for a flow log based on mappings of its {@link Protocol}s to {@link Tags}.
@@ -57,14 +58,7 @@ class FlowLogProcessor implements Runnable {
         Loggers.INFO.accept("[%%] Processing %s...".formatted(input));
 
         try (var rows = input.get()) {
-            final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
-                rows
-                    .parallel()
-                    .unordered()
-                    .peek(rowCounter.andThen(debug::rows)) // Potentially write the input data to a file for debugging.
-                    .map(this::toProtocol)
-                    .collect(countingCollector);
-
+            final var counts = toCounts(rows, rowCounter, debug::rows);
             output
                 .row("Tag Counts:")
                 .row("Tag", "Count");
@@ -79,15 +73,8 @@ class FlowLogProcessor implements Runnable {
                 .getValue()
                 .forEach(this::writeCombinations);
         } finally {
+            printStatistics(startTime, rowCount);
             releaseResources();
-
-            final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
-            if (Settings.DEBUG) {
-                final var size = rowCount.get() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE;
-                System.out.format("[#] Processed %d rows (~%.2f MiB) in %.5f seconds.%n", rowCount.get(), size, duration);
-            } else {
-                System.out.format("[#] Processed in %.5f seconds.%n", duration);
-            }
         }
     }
 
@@ -95,13 +82,17 @@ class FlowLogProcessor implements Runnable {
     // Private Helper Methods
     //==================================================================================================================
 
-    private void writeTags(String tag, long count) {
-        output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, count);
-    }
-
-    private void writeCombinations(Protocol protocol, long count) {
-        // Invoke the string-only overloaded version of the method to avoid stream creations.
-        output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
+    @SafeVarargs
+    private Map.Entry<Map<String, Long>, Map<Protocol, Long>> toCounts(
+        Stream<String[]> rows,
+        Consumer<String[]>... debuggers
+    ) {
+        return rows
+            .parallel()
+            .unordered()
+            .peek(Stream.of(debuggers).reduce(Consumer::andThen).orElse(ignored -> { }))
+            .map(this::toProtocol)
+            .collect(countingCollector);
     }
 
     private Protocol toProtocol(String[] columns) {
@@ -113,6 +104,31 @@ class FlowLogProcessor implements Runnable {
         return tags.getOrDefault(protocol, Protocol.UNKNOWN.name());
     }
 
+    private void writeTags(String tag, long count) {
+        output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, count);
+    }
+
+    private void writeCombinations(Protocol protocol, long count) {
+        // Invoke the string-only overloaded version of the method to avoid stream creations.
+        output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
+    }
+
+    private void printStatistics(Instant startTime, Number rowCount) {
+        final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
+        if (Settings.DEBUG) {
+            Loggers.INFO.accept("[#] Processed %d rows (~%.2f MiB) in %.5f seconds.".formatted(
+                rowCount.longValue(),
+                rowCount.longValue() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE,
+                duration
+            ));
+        } else {
+            Loggers.INFO.accept("[#] Processed in %.5f seconds.".formatted(duration));
+        }
+    }
+
+    /**
+     * Release all resources used by this {@link FlowLogProcessor}.
+     */
     private void releaseResources() {
         for (final var resource : List.of(input, output, debug)) {
             if (!(resource instanceof AutoCloseable closeable)) {
