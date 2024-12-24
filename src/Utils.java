@@ -11,7 +11,7 @@ interface Utils {
     /**
      * Construct a {@link Stream} from a given {@link Iterable}.
      *
-     * @param iterable The {@link Iterable} to construct the {@link Stream} from
+     * @param iterable The {@link Iterable} to construct the {@link Stream} from; may be {@code null}
      * @param <T> The type of elements encountered by the given {@link Iterable} and the constructed {@link Stream}
      *
      * @see Collection#stream()
@@ -40,7 +40,7 @@ interface Utils {
     /**
      * Construct an array containing the elements of a given {@link Iterable} using a given array constructor.
      *
-     * @param iterable The {@link Iterable} of to construct the array from
+     * @param iterable The {@link Iterable} of to construct the array from; may be {@code null}
      * @param arrayConstructor The array-size-accepting {@link IntFunction} to use to construct the array; typically
      *                         passed in the method/constructor reference syntax (i.e., {@code String[]::new})
      * @param <T> The type of elements encountered by the given {@link Iterable} and contained in the constructed array

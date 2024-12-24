@@ -3,5 +3,6 @@
  *   a state beyond its lifetime.
  */
 interface Settings {
+    boolean SEQUENTIAL = Boolean.getBoolean("sequential");
     boolean DEBUG = Boolean.getBoolean("debug");
 }

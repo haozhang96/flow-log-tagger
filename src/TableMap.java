@@ -8,13 +8,12 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 /**
- * This class is an abstract implementation of {@link ConcurrentMap} that uses a {@link TableSupplier} to build its
- *   mappings.
+ * This class is an implementation of {@link ConcurrentMap} that uses a {@link TableSupplier} to build its mappings.
  *
  * @param <K> {@inheritDoc}
  * @param <V> {@inheritDoc}
  */
-abstract class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableConsumer {
+class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableConsumer {
     private static final @Serial long serialVersionUID = 1L;
 
     private final UnaryOperator<Stream<String[]>> mapper;

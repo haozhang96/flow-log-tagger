@@ -54,7 +54,7 @@ class FlowLogProcessor implements Runnable {
     public void run() {
         final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
-        final Consumer<String[]> rowCounter = Settings.DEBUG ? ignored -> rowCount.incrementAndGet() : ignored -> { };
+        final Consumer<String[]> rowCounter = Settings.DEBUG ? row -> rowCount.incrementAndGet() : row -> { };
         Loggers.INFO.accept("[%%] Processing %s...".formatted(input));
 
         try (var rows = input.get()) {
@@ -87,10 +87,9 @@ class FlowLogProcessor implements Runnable {
         Stream<String[]> rows,
         Consumer<String[]>... debuggers
     ) {
-        return rows
-            .parallel()
+        return (Settings.SEQUENTIAL ? rows.sequential() : rows.parallel())
             .unordered()
-            .peek(Stream.of(debuggers).reduce(Consumer::andThen).orElse(ignored -> { }))
+            .peek(Stream.of(debuggers).reduce(Consumer::andThen).orElse(row -> { }))
             .map(this::toProtocol)
             .collect(countingCollector);
     }

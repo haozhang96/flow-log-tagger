@@ -27,6 +27,21 @@ class TableConsumerTest extends BaseUnitTest {
     //==================================================================================================================
 
     @Test
+    void noop_shouldDoNothing() {
+        // Just test the chaining.
+        TableConsumer
+            .NOOP
+            .row(OBJECT_ROWS[0])
+            .row(STRING_ROWS[0])
+            .row(Stream.of(STRING_ROWS[0]))
+            .row(Arrays.asList(STRING_ROWS[0]))
+            .rows(OBJECT_ROWS)
+            .rows(STRING_ROWS)
+            .rows(Stream.of(STRING_ROWS))
+            .rows(Arrays.asList(STRING_ROWS));
+    }
+
+    @Test
     void row_givenObjectArray_willInvokeAcceptWithCorrectArguments() {
         TARGET.row(OBJECT_ROWS[0]);
     }

@@ -104,10 +104,15 @@ abstract class BaseUnitTest {
             }
         }
 
+        final var testName = testClass.getSimpleName();
         switch (failures.size()) {
-            case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testClass.getSimpleName());
-            case 1 -> UNSAFE.throwException(failures.getFirst());
-            default -> throw new AssertionError("[!] Multiple test failures: " + failures);
+            case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testName);
+            case 1 -> throw new AssertionError("[!] Test failure: " + testName, failures.getFirst());
+            default -> {
+                var error = new AssertionError("[!] Multiple test failures: " + testName, failures.removeLast());
+                failures.forEach(error::addSuppressed); // Chain the remaining as suppressed exceptions.
+                throw error;
+            }
         }
     }
 

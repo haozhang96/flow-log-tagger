@@ -1,10 +1,14 @@
-import java.util.Collection;
 import java.util.List;
+import java.util.SequencedCollection;
 
 public class UnitTests extends BaseUnitTest {
-    private static final Collection<Class<? extends BaseUnitTest>> TARGETS =
+    private static final SequencedCollection<Class<? extends BaseUnitTest>> TESTS =
         List.of(
             BaseUnitTestTest.class,
+            UtilsTest.class,
+            ProtocolTest.class,
+            IANAProtocolsTest.class,
+            TagsTest.class,
             TableConsumerTest.class,
             TableSupplierTest.class,
             TableMapTest.class,
@@ -12,11 +16,8 @@ public class UnitTests extends BaseUnitTest {
             TableFileReaderTest.class,
             TableFileWriterTest.class,
             TableGeneratorTest.class,
-            ProtocolTest.class,
-            IANAProtocolsTest.class,
-            TagsTest.class,
-            UtilsTest.class,
-            FlowLogGeneratorTest.class
+            FlowLogGeneratorTest.class,
+            FlowLogProcessorTest.class
         );
 
     //==================================================================================================================
@@ -24,6 +25,6 @@ public class UnitTests extends BaseUnitTest {
     //==================================================================================================================
 
     public static void main(String[] args) {
-        TARGETS.forEach(BaseUnitTest::run);
+        TESTS.forEach(BaseUnitTest::run);
     }
 }

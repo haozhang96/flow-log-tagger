@@ -18,8 +18,11 @@ class AbstractTableFileProcessorTest extends BaseUnitTest {
     //==================================================================================================================
 
     @Test
-    void inferSeparator_should() {
-        assert$(TARGET.separator.equals(SEPARATOR), "The separator should contain the path: " + PATH);
+    void inferSeparator_shouldInferColumnSeparatorCorrectly() {
+        assert$(
+            TARGET.separator.equals(SEPARATOR),
+            "Unexpected separator: expected=%s, given=%s".formatted(SEPARATOR, TARGET.separator)
+        );
     }
 
     @Test
