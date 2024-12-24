@@ -83,7 +83,7 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
             writer.close();
         } finally {
             // We wouldn't know for sure whether anything was written at this point, but this assumption is most likely.
-            System.out.println("[<] Wrote file: " + path);
+            Loggers.INFO.accept("[<] Wrote file: " + path);
         }
     }
 }

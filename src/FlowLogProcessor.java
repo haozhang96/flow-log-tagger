@@ -54,7 +54,7 @@ class FlowLogProcessor implements Runnable {
         final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
         final Consumer<String[]> rowCounter = Settings.DEBUG ? ignored -> rowCount.incrementAndGet() : ignored -> { };
-        System.out.format("[%%] Processing %s...%n", input);
+        Loggers.INFO.accept("[%%] Processing %s...".formatted(input));
 
         try (var rows = input.get()) {
             final Map.Entry<Map<String, Long>, Map<Protocol, Long>> counts =
@@ -134,7 +134,7 @@ class FlowLogProcessor implements Runnable {
      */
     private static void warmUp() {
         if (WARMED_UP.compareAndSet(false, true)) {
-            System.out.println("[!] Warming up the Java virtual machine...");
+            Loggers.INFO.accept("[!] Warming up the Java virtual machine...");
             new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1 << 10), TableConsumer.NOOP).run();
         }
     }

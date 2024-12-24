@@ -55,7 +55,7 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
      */
     @Override
     public Stream<String[]> get() {
-        System.out.println("[>] Reading file: " + path);
+        Loggers.INFO.accept("[>] Reading file: " + path);
 
         return lines(path)
             .skip(hasHeaderRow ? 1L : 0L) // Skip the first header row if explicitly specified.

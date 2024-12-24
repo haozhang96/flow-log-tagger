@@ -49,7 +49,7 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 ## Design Choices
 * `java.util.Objects.requireNonNull(...)` was used for runtime null-checking to avoid external dependencies required for
   compile-time null-checking, such as external annotations (e.g., `javax.annotation.Nonnull`).
-* `java.lang.System.out` was used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
+* `java.lang.System.out|err` were used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
   verbose information logged to the console.
 
 ## Example
