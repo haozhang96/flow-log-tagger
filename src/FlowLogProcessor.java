@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,12 +23,6 @@ class FlowLogProcessor implements Runnable {
     private final Tags tags;
     private final TableConsumer output;
     private final TableConsumer debug = Settings.DEBUG ? new TableFileWriter(Constants.DEBUG_PATH) : TableConsumer.NOOP;
-    private final Collector<Protocol, ?, Map.Entry<Map<String, Long>, Map<Protocol, Long>>> countingCollector =
-        Collectors.teeing(
-            Collectors.groupingByConcurrent(this::getTag, ConcurrentSkipListMap::new, Collectors.counting()),
-            Collectors.groupingByConcurrent(Function.identity(), ConcurrentSkipListMap::new, Collectors.counting()),
-            Map::entry // We're simply using this as a pair/2-tuple. This becomes infeasible with more data points.
-        );
 
     //==================================================================================================================
     // Constructors
@@ -64,14 +57,14 @@ class FlowLogProcessor implements Runnable {
                 .row("Tag", "Count");
             counts
                 .getKey()
-                .forEach(this::writeTags);
+                .forEach(output::row);
             output
                 .row()
                 .row("Port/Protocol Combination Counts:")
                 .row("Port", "Protocol", "Count");
             counts
                 .getValue()
-                .forEach(this::writeCombinations);
+                .forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), count));
         } finally {
             printStatistics(startTime, rowCount);
             releaseResources();
@@ -87,11 +80,15 @@ class FlowLogProcessor implements Runnable {
         Stream<String[]> rows,
         Consumer<String[]>... debuggers
     ) {
-        return (Settings.SEQUENTIAL ? rows.sequential() : rows.parallel())
-            .unordered()
-            .peek(Stream.of(debuggers).reduce(Consumer::andThen).orElse(row -> { }))
+        return (Settings.SEQUENTIAL ? rows.sequential() : rows.parallel()) // Use parallel computation by default.
+            .unordered() // Potentially lift any ordering constraint - if the data source allows it.
+            .peek(Stream.of(debuggers).reduce(Consumer::andThen).orElse(row -> { })) // Attach debuggers.
             .map(this::toProtocol)
-            .collect(countingCollector);
+            .collect(Collectors.teeing(
+                Collectors.groupingByConcurrent(this::getTag, ConcurrentSkipListMap::new, Collectors.counting()),
+                Collectors.groupingByConcurrent(Function.identity(), ConcurrentSkipListMap::new, Collectors.counting()),
+                Map::entry // We're simply using this as a pair/2-tuple. This becomes infeasible with more data points.
+            ));
     }
 
     private Protocol toProtocol(String[] columns) {
@@ -100,16 +97,7 @@ class FlowLogProcessor implements Runnable {
     }
 
     private String getTag(Protocol protocol) {
-        return tags.getOrDefault(protocol, Protocol.UNKNOWN.name());
-    }
-
-    private void writeTags(String tag, long count) {
-        output.row(tag.equals(Constants.UNKNOWN) ? "Untagged" : tag, count);
-    }
-
-    private void writeCombinations(Protocol protocol, long count) {
-        // Invoke the string-only overloaded version of the method to avoid stream creations.
-        output.row(String.valueOf(protocol.port()), protocol.name(), String.valueOf(count));
+        return tags.getOrDefault(protocol, "Untagged");
     }
 
     private void printStatistics(Instant startTime, Number rowCount) {
