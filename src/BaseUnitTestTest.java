@@ -90,17 +90,13 @@ class BaseUnitTestTest extends BaseUnitTest {
                 method.getName().equals("get") ? Stream.of(table) : instantiate(method.getReturnType());
 
         try (var rows = mock(TableSupplier.class, handler).iterator()) {
-            rows.forEachRemaining(columns -> {
-                Loggers.INFO.accept(Arrays.toString(columns));
-
-                assert$(
-                    Stream
-                        .of(table)
-                        .map(Arrays::asList)
-                        .anyMatch(Arrays.asList(columns)::equals),
-                    () -> "Expected a subsequence of %s: %s".formatted(toString(table), toString(columns))
-                );
-            });
+            rows.forEachRemaining(columns -> assert$(
+                Stream
+                    .of(table)
+                    .map(Arrays::asList)
+                    .anyMatch(Arrays.asList(columns)::equals),
+                () -> "Expected a subsequence of %s: %s".formatted(toString(table), toString(columns))
+            ));
         }
     }
 }

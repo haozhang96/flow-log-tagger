@@ -130,7 +130,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
      */
     private Iterable<String> toString(Object[] array) {
         // We could use a simple for-loop to avoid stream creations, but this method isn't invoked enough to make doing
-        //   so worthwhile.
+        //   so at the expense of readability worthwhile.
         return Stream
             .of(array)
             .map(String::valueOf)
@@ -146,6 +146,19 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
         return Utils.toArray(iterable, String[]::new);
     }
 
+    /**
+     * Invoke a given {@link Iterable}-accepting method after applying a given {@link T}-accepting mapper to a given
+     *   {@link T} input.
+     *
+     * @param method The method to invoke after applying the given mapper to the given input; typically passed in the
+     *               method/constructor reference syntax (i.e., {@code this::rows})
+     * @param mapper The mapper to apply to the given value before invoking the given method
+     * @param input The input to map using the given mapper and invoke using the given method
+     * @param <T> The type of input for the given mapper
+     * @param <E> The element type of the {@link Iterable} accepted by the given method
+     * @param <R> The type of value returned by the given method
+     * @return A value returned by the given method after applying the given mapper to the given input
+     */
     private static <T, E, R> R apply(
         Function<? super Iterable<E>, ? extends R> method,
         Function<? super T, ? extends Iterable<E>> mapper,

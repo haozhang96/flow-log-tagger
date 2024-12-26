@@ -42,6 +42,10 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
     /**
      * Retrieve an {@link java.util.Iterator Iterator} of the tabular data as string column arrays.
+     *
+     * @apiNote {@link java.util.Iterator Iterator}s retrieved using this method must be used with a
+     *          <a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html">try-with-resources
+     *          statement</a> to ensure any underlying resources are properly closed.
      */
     @Override
     default Iterator iterator() {
