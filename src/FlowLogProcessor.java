@@ -16,6 +16,7 @@ import java.util.stream.Stream;
  */
 class FlowLogProcessor implements Runnable {
     private static final AtomicBoolean WARMED_UP = new AtomicBoolean();
+    private static final Consumer<String[]> NOOP_DEBUGGER = row -> {};
     private static final int DESTINATION_PORT = 6;
     private static final int PROTOCOL = 7;
 
@@ -47,11 +48,10 @@ class FlowLogProcessor implements Runnable {
     public void run() {
         final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
-        final Consumer<String[]> rowCounter = Settings.DEBUG ? row -> rowCount.incrementAndGet() : row -> { };
         Loggers.INFO.accept("[%%] Processing flow log using %s...".formatted(input));
 
         try (var rows = input.get()) {
-            final var counts = toCounts(rows, rowCounter, debug::rows);
+            final var counts = toCounts(rows, row -> rowCount.incrementAndGet(), debug::rows);
             output
                 .row("Tag Counts:")
                 .row("Tag", "Count");
@@ -82,7 +82,7 @@ class FlowLogProcessor implements Runnable {
     ) {
         return (Settings.SEQUENTIAL ? rows.sequential() : rows.parallel()) // Use parallel computation by default.
             .unordered() // Potentially lift any ordering constraint - if the data source allows it.
-            .peek(Stream.of(debuggers).reduce(Consumer::andThen).orElse(row -> { })) // Attach debuggers.
+            .peek(Settings.DEBUG ? Stream.of(debuggers).reduce(Consumer::andThen).orElse(NOOP_DEBUGGER) : NOOP_DEBUGGER)
             .map(this::toProtocol)
             .collect(Collectors.teeing(
                 Collectors.groupingByConcurrent(this::getTag, ConcurrentSkipListMap::new, Collectors.counting()),

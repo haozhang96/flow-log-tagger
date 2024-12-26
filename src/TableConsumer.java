@@ -15,7 +15,7 @@ interface TableConsumer extends Consumer<Iterable<String[]>> {
     /**
      * A {@link TableConsumer} that consumes no tabular data; mainly used for testing
      */
-    TableConsumer NOOP = rows -> { };
+    TableConsumer NOOP = rows -> {};
 
     //==================================================================================================================
     // Implementation Methods
