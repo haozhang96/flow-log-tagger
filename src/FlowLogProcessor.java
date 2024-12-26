@@ -48,7 +48,7 @@ class FlowLogProcessor implements Runnable {
         final var startTime = Instant.now();
         final var rowCount = new AtomicLong();
         final Consumer<String[]> rowCounter = Settings.DEBUG ? row -> rowCount.incrementAndGet() : row -> { };
-        Loggers.INFO.accept("[%%] Processing %s...".formatted(input));
+        Loggers.INFO.accept("[%%] Processing flow log using %s...".formatted(input));
 
         try (var rows = input.get()) {
             final var counts = toCounts(rows, rowCounter, debug::rows);
@@ -103,13 +103,13 @@ class FlowLogProcessor implements Runnable {
     private void printStatistics(Instant startTime, Number rowCount) {
         final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
         if (Settings.DEBUG) {
-            Loggers.INFO.accept("[#] Processed %d rows (~%.2f MiB) in %.5f seconds.".formatted(
+            Loggers.INFO.accept("[#] Processed flow log with %d rows (~%.2f MiB) in %.5f seconds.".formatted(
                 rowCount.longValue(),
                 rowCount.longValue() * Constants.FLOW_LOG_RECORD_SIZE / (double) Constants.MEBIBYTE_SCALE,
                 duration
             ));
         } else {
-            Loggers.INFO.accept("[#] Processed in %.5f seconds.".formatted(duration));
+            Loggers.INFO.accept("[#] Processed flow log in %.5f seconds.".formatted(duration));
         }
     }
 

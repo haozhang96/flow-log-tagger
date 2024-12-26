@@ -3,10 +3,10 @@
 ## Requirements
 * Java (JDK) 21
 
-## Running
+## Execution
 To compile the Java program, run the following command:
 ```
-javac -sourcepath src -d out src/Main.java src/Test.java
+javac -sourcepath src -d out src/Main.java
 ```
 
 To run the program using the included sample data, run the following command:
@@ -19,19 +19,24 @@ To run the program using your own data, run the following command:
 java -cp out Main <path to flow log> <path to lookup table> <path to output>
 ```
 
-To run the program using randomly generated data that simulates a (roughly) 10 MiB flow log file, run the following
-command:
-```
-java -cp out Test
-```
-
 To run the program using randomly generated data that simulates a (roughly) `N` MiB flow log file, run the following
 command:
 ```
-java -cp out Test <N MiB>
+java -cp out Main <N MiB>
 ```
 
 In all cases, inspect the `data/output.csv` file for the program's output results.
+
+## Testing
+To compile the Java program's unit tests, run the following command:
+```
+javac -sourcepath src -d out src/UnitTests.java
+```
+
+To run the program's unit tests, run the following command:
+```
+java -cp out UnitTests
+```
 
 ## Assumptions
 * The column orders of all the files are constant.
@@ -50,7 +55,9 @@ In all cases, inspect the `data/output.csv` file for the program's output result
 * `java.util.Objects.requireNonNull(...)` was used for runtime null-checking to avoid external dependencies required for
   compile-time null-checking, such as external annotations (e.g., `javax.annotation.Nonnull`).
 * `java.lang.System.out|err` were used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
-  verbose information logged to the console.
+  verbose information logged to the console. However, they have been consolidated into the [Loggers](src/Loggers.java)
+  class for ease-of-change later.
+* 
 
 ## Example
 [input.log](data/input.log)
