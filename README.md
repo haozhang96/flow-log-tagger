@@ -56,8 +56,22 @@ java -cp out UnitTests
   compile-time null-checking, such as external annotations (e.g., `javax.annotation.Nonnull`).
 * `java.lang.System.out|err` were used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
   verbose information logged to the console. However, they have been consolidated into the [Loggers](src/Loggers.java)
-  class for ease-of-change later.
-* 
+  class as functional methods for pluggability.
+* Rudimentary column-separator inference was implemented based on a tabular data file's extension and first line. This
+  allows common tabular data file formats (e.g., CSV and TSV) to be used without requiring a column separator to be
+  provided explicitly.
+* A simple `ConcurrentHashMap`-based caching was implemented for [Protocol](src/Protocol.java) to decrease the impact of
+  frequent garbage collection caused by large datasets with common data points. There were plans to implement
+  soft-reference-value-based caching or an eviction policy, but this would require weighing memory constraints against
+  processing time constraints. Currently, we prefer faster processing times.
+* A simple testing harness was implemented in [BaseUnitTest](src/BaseUnitTest.java) to facilitate unit testing without
+  requiring any testing dependencies.
+* `ConcurrentSkipListMap`s were used to allow the output of [FlowLogProcessor](src/FlowLogProcessor.java) to be written
+  in alphabetically ascending (but not lexicographically, i.e., using `String.CASE_INSENSITIVE_ORDER`) order.
+* Multiple methods where `Stream`s could have been used but ultimately avoided have been chosen so to decrease the
+  overhead of `Stream` creations depending on their invocation frequencies.
+* `AutoCloseable`-based resources have been documented to help minimize resource leaks using
+  [try-with-resources statements](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html).
 
 ## Example
 [input.log](data/input.log)
