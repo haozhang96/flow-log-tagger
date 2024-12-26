@@ -54,7 +54,7 @@ class FlowLogProcessorTest extends BaseUnitTest {
 
         final var output = OUTPUT.toArray(String[][]::new);
         assert$(
-            equals(output, EXPECTED_OUTPUT),
+            equals(output, EXPECTED_OUTPUT), // TODO: Ordering of data rows should ideally not matter.
             () -> "Unexpected rows: expected=%s, given=%s".formatted(toString(EXPECTED_OUTPUT), toString(output))
         );
     }

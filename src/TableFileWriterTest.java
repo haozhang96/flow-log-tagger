@@ -112,13 +112,14 @@ class TableFileWriterTest extends BaseUnitTest {
     }
 
     private static void assertRows() {
+        final var table = TableConsumerTest.STRING_ROWS;
+
         try (var lines = TableFileReader.lines(PATH)) {
             final var lines$ = lines.map(line -> line.split(SEPARATOR)).toArray(String[][]::new);
-            final var rows =
-                Arrays.copyOfRange(lines$, lines$.length - TableConsumerTest.STRING_ROWS.length, lines$.length);
+            final var rows = Arrays.copyOfRange(lines$, lines$.length - table.length, lines$.length);
             assert$(
-                equals(rows, TableConsumerTest.STRING_ROWS),
-                () -> "Unexpected rows: expected=%s, given=%s".formatted(toString(TableConsumerTest.STRING_ROWS), toString(rows))
+                equals(rows, table),
+                () -> "Unexpected rows: expected=%s, given=%s".formatted(toString(table), toString(rows))
             );
         }
     }

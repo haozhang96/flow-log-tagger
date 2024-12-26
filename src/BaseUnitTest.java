@@ -110,7 +110,7 @@ abstract class BaseUnitTest {
             case 1 -> throw new AssertionError("[!] Test failure: " + testName, failures.getFirst());
             default -> {
                 var error = new AssertionError("[!] Multiple test failures: " + testName, failures.removeLast());
-                failures.forEach(error::addSuppressed); // Chain the remaining as suppressed exceptions.
+                failures.reversed().forEach(error::addSuppressed); // Chain the remaining as suppressed exceptions.
                 throw error;
             }
         }
@@ -172,16 +172,10 @@ abstract class BaseUnitTest {
     static <T> T instantiate(Class<T> type) {
         if (type.isPrimitive()) {
             // Use default values for primitive types.
-            return type.cast(Array.get(Array.newInstance(type, 1), 0));
+            return type.cast(type != void.class ? Array.get(Array.newInstance(type, 1), 0) : null);
         } else if (type.isInterface()) {
             // Use reflective proxies for interface types.
-            return mock(type, (proxy, method, args) -> {
-                try {
-                    return instantiate(method.getReturnType());
-                } catch (Throwable cause) {
-                    return null;
-                }
-            });
+            return mock(type, (proxy, method, args) -> instantiate(method.getReturnType()));
         }
 
         // Try invoking the default constructor.
