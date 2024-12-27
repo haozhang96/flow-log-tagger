@@ -1,6 +1,9 @@
 import java.util.Collection;
 import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntFunction;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -51,5 +54,19 @@ interface Utils {
             case null -> arrayConstructor.apply(0);
             default -> stream(iterable).toArray(arrayConstructor);
         };
+    }
+
+    /**
+     * Construct a {@linkplain Collector.Characteristics#CONCURRENT concurrent} version of {@link Collectors#counting()}
+     *   that uses {@link AtomicLong}s to keep element counts, allowing for a concurrent reduction operation.
+     */
+    static <T> Collector<T, ?, Long> countingCollector() {
+        return Collector.of(
+            AtomicLong::new,
+            (counter, element) -> counter.getAndIncrement(),
+            (a, b) -> { a.getAndAdd(b.get()); return a; },
+            AtomicLong::get,
+            Collector.Characteristics.CONCURRENT, Collector.Characteristics.UNORDERED
+        );
     }
 }

@@ -3,7 +3,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -51,23 +50,23 @@ class FlowLogProcessor implements Runnable {
         Loggers.INFO.accept("[%%] Processing flow log using %s...".formatted(input));
 
         try (var rows = input.get()) {
-            final var counts = toCounts(rows, row -> rowCount.incrementAndGet(), debug::rows);
+            final var counts = toCounts(rows, row -> rowCount.getAndIncrement(), debug::rows);
             output
                 .row("Tag Counts:")
                 .row("Tag", "Count");
             counts
                 .getKey()
-                .forEach(output::row);
+                .forEach((tag, count) -> output.row(tag, String.valueOf(count)));
             output
                 .row()
                 .row("Port/Protocol Combination Counts:")
                 .row("Port", "Protocol", "Count");
             counts
                 .getValue()
-                .forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), count));
-            printStatistics(startTime, rowCount);
+                .forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), String.valueOf(count)));
         } finally {
             releaseResources();
+            printStatistics(startTime, rowCount);
         }
     }
 
@@ -85,8 +84,8 @@ class FlowLogProcessor implements Runnable {
             .peek(Settings.DEBUG ? Stream.of(debuggers).reduce(Consumer::andThen).orElse(NOOP_DEBUGGER) : NOOP_DEBUGGER)
             .map(this::toProtocol)
             .collect(Collectors.teeing(
-                Collectors.groupingByConcurrent(this::getTag, ConcurrentSkipListMap::new, Collectors.counting()),
-                Collectors.groupingByConcurrent(Function.identity(), ConcurrentSkipListMap::new, Collectors.counting()),
+                Collectors.groupingByConcurrent(this::getTag, Utils.countingCollector()),
+                Collectors.groupingByConcurrent(Function.identity(), Utils.countingCollector()),
                 Map::entry // We're simply using this as a pair/2-tuple. This becomes infeasible with more data points.
             ));
     }

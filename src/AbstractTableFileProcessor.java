@@ -1,5 +1,4 @@
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -83,11 +82,10 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
                 .flatMapToInt(String::codePoints)
                 .filter(codePoint -> !(Character.isAlphabetic(codePoint) || Character.isDigit(codePoint)))
                 .boxed()
-                .collect(Collectors.groupingByConcurrent(Character::toString, Collectors.counting()))
+                .collect(Collectors.groupingByConcurrent(Character::toString, Utils.countingCollector()))
                 .entrySet()
                 .stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .findAny()
+                .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey);
         }
     }

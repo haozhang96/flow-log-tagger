@@ -93,7 +93,7 @@ class TableSupplierTest extends BaseUnitTest {
         return Stream
             .generate(TableSupplierTest::generateRow)
             .limit(ROWS)
-            .onClose(CLOSE_COUNT::incrementAndGet);
+            .onClose(CLOSE_COUNT::getAndIncrement);
     }
 
     private static String[] generateRow() {
