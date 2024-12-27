@@ -59,7 +59,6 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
 
         return lines(path)
             .skip(hasHeaderRow ? 1L : 0L) // Skip the first header row if explicitly specified.
-            .dropWhile(TableFileReader::isHeaderRow) // Skip any remaining header rows using heuristics.
             .map(line -> line.split(separator));
     }
 

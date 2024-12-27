@@ -65,8 +65,8 @@ class FlowLogProcessor implements Runnable {
             counts
                 .getValue()
                 .forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), count));
-        } finally {
             printStatistics(startTime, rowCount);
+        } finally {
             releaseResources();
         }
     }
