@@ -234,7 +234,7 @@ abstract class BaseUnitTest {
     /**
      * @see Arrays#deepEquals(Object[], Object[])
      */
-    static boolean equals(Object[] a, Object[] b) {
+    static <T> boolean equals(T[] a, T[] b) {
         return Arrays.deepEquals(a, b);
     }
 

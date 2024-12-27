@@ -52,10 +52,12 @@ class FlowLogProcessorTest extends BaseUnitTest {
     void run_shouldProcessFlowLogCorrectly() {
         TARGET.run();
 
-        final var output = OUTPUT.toArray(String[][]::new);
+        // The data row ordering is non-deterministic, so we can't perform a strict, ordered assertion.
         assert$(
-            equals(output, EXPECTED_OUTPUT), // TODO: Ordering of data rows should ideally not matter.
-            () -> "Unexpected rows: expected=%s, given=%s".formatted(toString(EXPECTED_OUTPUT), toString(output))
+            OUTPUT
+                .stream()
+                .allMatch(row -> Stream.of(EXPECTED_OUTPUT).anyMatch(expectedRow -> equals(row, expectedRow))),
+            () -> "Unexpected rows: expected=%s, given=%s".formatted(toString(EXPECTED_OUTPUT), toString(OUTPUT.toArray()))
         );
     }
 }
