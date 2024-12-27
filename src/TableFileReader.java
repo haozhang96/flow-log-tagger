@@ -3,7 +3,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -67,18 +66,15 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     //==================================================================================================================
 
     /**
-     * Read a given {@link Path}'s file lazily into a {@link Stream} of non-empty lines.
+     * Read a given {@link Path}'s file lazily into a {@link Stream} of lines.
      *
-     * @param path The {@link Path} of the file to read lazily into a {@link Stream} of non-empty lines
+     * @param path The {@link Path} of the file to read lazily into a {@link Stream} of lines
      *
      * @see Files#lines(Path)
      */
-    @SuppressWarnings("resource") // The stream must be closed by the caller.
     static Stream<String> lines(Path path) {
         try {
-            return Files
-                .lines(path)
-                .filter(Predicate.not(String::isEmpty));
+            return Files.lines(path);
         } catch (IOException exception) {
             throw new UncheckedIOException("Failed to open file for reading: " + path, exception);
         }
