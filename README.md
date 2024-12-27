@@ -66,8 +66,6 @@ java -cp out UnitTests
   processing time constraints. Currently, we prefer faster processing times.
 * A simple testing harness was implemented in [BaseUnitTest](src/BaseUnitTest.java) to facilitate unit testing without
   requiring any testing dependencies.
-* `ConcurrentSkipListMap`s were used to allow the output of [FlowLogProcessor](src/FlowLogProcessor.java) to be written
-  in alphabetically ascending (but not lexicographically, i.e., using `String.CASE_INSENSITIVE_ORDER`) order.
 * Multiple methods where `Stream`s could have been used but ultimately avoided have been chosen so to decrease the
   overhead of `Stream` creations depending on their invocation frequencies.
 * `AutoCloseable`-based resources have been documented to help minimize resource leaks using
