@@ -8,7 +8,7 @@ class TableMapTest extends BaseUnitTest {
     private static final TableMap<String, String> TARGET =
         new TableMap<>(
             new TableGenerator(ROWS, COLUMN_GENERATOR, COLUMN_GENERATOR), // Every key (column 0) should be unique
-            Collectors.toMap(columns -> columns[0], columns -> columns[1])
+            Collectors.toConcurrentMap(columns -> columns[0], columns -> columns[1])
         );
 
     //==================================================================================================================

@@ -33,8 +33,8 @@ class IANAProtocols extends TableMap<String, Protocol> {
     private static final int KEYWORD = 1;
     private static final UnaryOperator<Stream<String[]>> MAPPER =
         rows -> rows.filter(columns -> columns[DECIMAL].codePoints().allMatch(Character::isDigit));
-    private static final Collector<String[], ?, Map<String, Protocol>> COLLECTOR =
-        Collectors.toMap(columns -> columns[DECIMAL], columns -> Protocol.of(columns[DECIMAL], columns[KEYWORD]));
+    private static final Collector<String[], ?, ? extends Map<String, Protocol>> COLLECTOR =
+        Collectors.toConcurrentMap(columns -> columns[DECIMAL], columns -> Protocol.of(columns[DECIMAL], columns[KEYWORD]));
 
     //==================================================================================================================
     // Constructors

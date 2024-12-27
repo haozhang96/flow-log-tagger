@@ -17,25 +17,32 @@ class TableMap<K, V> extends ConcurrentHashMap<K, V> implements TableConsumer {
     private static final @Serial long serialVersionUID = 1L;
 
     private final UnaryOperator<Stream<String[]>> mapper;
-    private final Collector<String[], ?, Map<K, V>> collector;
+    private final Collector<? super String[], ?, ? extends Map<? extends K, ? extends V>> collector;
 
     //==================================================================================================================
     // Constructors
     //==================================================================================================================
 
-    TableMap(Collector<String[], ?, Map<K, V>> collector) {
+    TableMap(Collector<? super String[], ?, ? extends Map<? extends K, ? extends V>> collector) {
         this(TableSupplier.NOOP, collector);
     }
 
-    TableMap(UnaryOperator<Stream<String[]>> mapper, Collector<String[], ?, Map<K, V>> collector) {
+    TableMap(
+        UnaryOperator<Stream<String[]>> mapper,
+        Collector<? super String[], ?, ? extends Map<? extends K, ? extends V>> collector
+    ) {
         this(TableSupplier.NOOP, mapper, collector);
     }
 
-    TableMap(TableSupplier data, Collector<String[], ?, Map<K, V>> collector) {
+    TableMap(TableSupplier data, Collector<? super String[], ?, ? extends Map<? extends K, ? extends V>> collector) {
         this(data, UnaryOperator.identity(), collector);
     }
 
-    TableMap(TableSupplier data, UnaryOperator<Stream<String[]>> mapper, Collector<String[], ?, Map<K, V>> collector) {
+    TableMap(
+        TableSupplier data,
+        UnaryOperator<Stream<String[]>> mapper,
+        Collector<? super String[], ?, ? extends Map<? extends K, ? extends V>> collector
+    ) {
         this.mapper = Objects.requireNonNull(mapper);
         this.collector = Objects.requireNonNull(collector);
 

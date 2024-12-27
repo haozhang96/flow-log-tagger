@@ -23,8 +23,8 @@ class IANAProtocolsTest extends BaseUnitTest {
 
     @Test
     void shouldMapTabularDataCorrectly() {
-        assert$(TARGET.remove("0", Protocol.of(0, "HOPOPT")), "Expected mapping to exist");
-        assert$(TARGET.remove("1", Protocol.of(1, "ICMP")), "Expected mapping to exist");
-        assert$(TARGET.remove("2", Protocol.of(2, "IGMP")), "Expected mapping to exist");
+        assert$(TARGET.remove("0", Protocol.of("0", "HOPOPT")), "Expected mapping to exist");
+        assert$(TARGET.remove("1", Protocol.of("1", "ICMP")), "Expected mapping to exist");
+        assert$(TARGET.remove("2", Protocol.of("2", "IGMP")), "Expected mapping to exist");
     }
 }

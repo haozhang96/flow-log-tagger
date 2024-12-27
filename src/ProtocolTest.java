@@ -23,8 +23,8 @@ class ProtocolTest extends BaseUnitTest {
 
     @Test
     void shouldMapTabularDataCorrectly() {
-        assert$(TARGET.remove(Protocol.of(25, "tcp"), "sv_P1"), "Expected mapping to exist");
-        assert$(TARGET.remove(Protocol.of(68, "udp"), "sv_P2"), "Expected mapping to exist");
-        assert$(TARGET.remove(Protocol.of(23, "tcp"), "sv_P1"), "Expected mapping to exist");
+        assert$(TARGET.remove(Protocol.of("25", "tcp"), "sv_P1"), "Expected mapping to exist");
+        assert$(TARGET.remove(Protocol.of("68", "udp"), "sv_P2"), "Expected mapping to exist");
+        assert$(TARGET.remove(Protocol.of("23", "tcp"), "sv_P1"), "Expected mapping to exist");
     }
 }
