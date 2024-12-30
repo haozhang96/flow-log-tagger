@@ -93,7 +93,15 @@ interface TableSupplier extends Supplier<Stream<String[]>>, Iterable<String[]> {
 
         @Override
         public boolean hasNext() {
-            return delegate.hasNext();
+            try {
+                return delegate.hasNext();
+            } catch (RuntimeException exception) {
+                // Only swallow the exception if the underlying stream is closed.
+                return switch (exception.getMessage()) {
+                    case String message when message.endsWith("closed") || message.contains("EOF") -> false;
+                    case null, default -> throw exception;
+                };
+            }
         }
 
         @Override
