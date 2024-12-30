@@ -2,7 +2,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 /**
@@ -20,18 +20,21 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
     //==================================================================================================================
 
     /**
-     * Construct an instance of {@link TableFileWriter} that writes to a given {@link Path}, inferring the column
-     *   separator and creating and/or appending to the end of the file without truncating it first.
+     * Construct an instance of {@link TableFileWriter} that writes to a given {@link Path} using a given list of
+     *   {@link OpenOption}(s) to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}.
      *
      * @param path The {@link Path} that the constructed {@link TableFileWriter} will write to
+     * @param options The list of {@link OpenOption}(s) to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}
+     *
+     * @apiNote The column separator will be inferred based on {@code path}'s file characteristics.
      */
-    TableFileWriter(Path path) {
-        this(path, null, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    TableFileWriter(Path path, OpenOption... options) {
+        this(path, null, options);
     }
 
     /**
      * Construct an instance of {@link TableFileWriter} that writes to a given {@link Path}, using a given column
-     *   separator and {@link OpenOption}s to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}.
+     *   separator and list of {@link OpenOption}(s) to pass to {@link Files#newBufferedWriter(Path, OpenOption...)}.
      *
      * @param path The {@link Path} that the constructed {@link TableFileWriter} will write to
      * @param separator The column separator to use for joining the columns into lines; may be {@code null} to allow
@@ -59,7 +62,10 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
             try {
                 writer.write(String.join(separator, columns) + System.lineSeparator());
             } catch (IOException exception) {
-                throw new UncheckedIOException("Failed to write to file: " + path, exception);
+                throw new UncheckedIOException(
+                    "Failed to write to [%s]: %s".formatted(path, Arrays.toString(columns)),
+                    exception
+                );
             }
         }
     }
