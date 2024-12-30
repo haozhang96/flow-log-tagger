@@ -3,6 +3,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,7 +60,17 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
 
         return lines(path)
             .skip(hasHeaderRow ? 1L : 0L) // Skip the first header row if explicitly specified.
-            .map(line -> line.split(separator));
+            .map(Settings.FAST ? line -> line.split(separator) : line -> line.strip().split(separator));
+    }
+
+    //==================================================================================================================
+    // Iterable Implementation Methods
+    //==================================================================================================================
+
+    @Override
+    public Spliterator<String[]> spliterator() {
+        // Use Files.lines()'s spliterator directly rather than wrapping over the stream and its iterator/spliterator.
+        return get().spliterator();
     }
 
     //==================================================================================================================
@@ -66,15 +78,17 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     //==================================================================================================================
 
     /**
-     * Read a given {@link Path}'s file lazily into a {@link Stream} of lines.
+     * Read a given {@link Path}'s file lazily into a {@link Stream} of non-empty lines.
      *
-     * @param path The {@link Path} of the file to read lazily into a {@link Stream} of lines
+     * @param path The {@link Path} of the file to read lazily into a {@link Stream} of non-empty lines
      *
      * @see Files#lines(Path)
      */
+    @SuppressWarnings("resource") // The stream must be closed by the caller.
     static Stream<String> lines(Path path) {
         try {
-            return Files.lines(path);
+            final var lines = Files.lines(path);
+            return Settings.FAST ? lines : lines.filter(Predicate.not(String::isEmpty));
         } catch (IOException exception) {
             throw new UncheckedIOException("Failed to open file for reading: " + path, exception);
         }

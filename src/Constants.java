@@ -1,5 +1,6 @@
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * This interface defines common constants used within the program.
@@ -17,11 +18,12 @@ interface Constants {
     Path LOOKUP_TABLE_PATH = DATA_DIRECTORY.resolve("lookup_table.csv");
     Path IANA_PROTOCOLS_PATH = DATA_DIRECTORY.resolve("iana_protocols.csv");
 
-    // Sizes
-    long MEBIBYTE_SCALE = 1L << 20;
-    long FLOW_LOG_RECORD_SIZE = 129L; // The approximate size in bytes for a single line of record in a flow log file
-
     // Tables
     Tags TAGS = new Tags(new TableFileReader(LOOKUP_TABLE_PATH));
     IANAProtocols IANA_PROTOCOLS = new IANAProtocols(new TableFileReader(IANA_PROTOCOLS_PATH));
+
+    // Runtime support
+    int PARALLELISM = ForkJoinPool.getCommonPoolParallelism();
+    long FLOW_LOG_RECORD_SIZE = 129L; // The approximate size in bytes for a single line of record in a flow log file
+    long MEBIBYTE_SCALE = 1L << 20;
 }

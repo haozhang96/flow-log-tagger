@@ -135,7 +135,7 @@ class FlowLogProcessor implements Runnable {
      *   initialization block due to circular class initialization.
      */
     private static void warmUp() {
-        if (WARMED_UP.compareAndSet(false, true)) {
+        if (Settings.WARM_UP && WARMED_UP.compareAndSet(false, true)) {
             Loggers.INFO.accept("[!] Warming up the Java virtual machine...");
             new FlowLogProcessor(FlowLogGenerator.ofMebibytes(1 << 10), TableConsumer.NOOP).run();
         }

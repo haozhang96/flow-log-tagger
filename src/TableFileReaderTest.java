@@ -1,7 +1,7 @@
 import java.util.Spliterators;
 
 class TableFileReaderTest extends BaseUnitTest {
-    private static final TableFileReader TARGET = new TableFileReader(Constants.INPUT_PATH);
+    private static final TableFileReader TARGET = new TableFileReader(Constants.LOOKUP_TABLE_PATH);
 
     //==================================================================================================================
     // Bootstrap
