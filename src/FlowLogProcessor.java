@@ -1,6 +1,5 @@
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,6 +50,8 @@ class FlowLogProcessor implements Runnable {
 
         try (var rows = input.get()) {
             final var counts = toCounts(rows, row -> rowCount.getAndIncrement(), debug::rows);
+            printOutput(counts.getKey(), counts.getValue());
+
             output
                 .row("Tag Counts:")
                 .row("Tag", "Count");
@@ -65,7 +66,7 @@ class FlowLogProcessor implements Runnable {
                 .getValue()
                 .forEach((protocol, count) -> output.row(protocol.port(), protocol.name(), String.valueOf(count)));
         } finally {
-            releaseResources();
+            Utils.releaseResources(input, output, debug);
             printStatistics(startTime, rowCount);
         }
     }
@@ -79,8 +80,8 @@ class FlowLogProcessor implements Runnable {
         Stream<String[]> rows,
         Consumer<String[]>... debuggers
     ) {
-        return (Settings.SEQUENTIAL ? rows.sequential() : rows.parallel()) // Use parallel computation by default.
-            .unordered() // Potentially lift any ordering constraint - if the data source allows it.
+        return (Settings.PARALLEL ? rows.parallel() : rows.sequential()) // Use parallel computation, if allowed.
+            .unordered() // Lift any potential ordering constraint - if the data source allows it.
             .peek(Settings.DEBUG ? Stream.of(debuggers).reduce(Consumer::andThen).orElse(NOOP_DEBUGGER) : NOOP_DEBUGGER)
             .map(this::toProtocol)
             .collect(Collectors.teeing(
@@ -99,6 +100,18 @@ class FlowLogProcessor implements Runnable {
         return tags.getOrDefault(protocol, "Untagged");
     }
 
+    private void printOutput(Map<String, Long> tags, Map<Protocol, Long> combinations) {
+        if (Settings.DEBUG) {
+            Loggers.INFO.accept("[#] Processed [%d] tag(s): %s".formatted(tags.size(), tags));
+            Loggers.INFO.accept("[#] Processed [%d] combination(s): %s".formatted(combinations.size(), combinations));
+        } else {
+            Loggers.INFO.accept("[#] Processed [%d] tag(s), [%d] combination(s)".formatted(
+                tags.size(),
+                combinations.size()
+            ));
+        }
+    }
+
     private void printStatistics(Instant startTime, Number rowCount) {
         final var duration = Duration.between(startTime, Instant.now()).toNanos() / 1_000_000_000D;
         if (Settings.DEBUG) {
@@ -109,23 +122,6 @@ class FlowLogProcessor implements Runnable {
             ));
         } else {
             Loggers.INFO.accept("[#] Processed flow log in %.5f seconds.".formatted(duration));
-        }
-    }
-
-    /**
-     * Release all resources used by this {@link FlowLogProcessor}.
-     */
-    private void releaseResources() {
-        for (final var resource : List.of(input, output, debug)) {
-            if (!(resource instanceof AutoCloseable closeable)) {
-                continue;
-            }
-
-            try {
-                closeable.close();
-            } catch (Exception exception) {
-                // Ignore and continue closing the rest of the resources.
-            }
         }
     }
 

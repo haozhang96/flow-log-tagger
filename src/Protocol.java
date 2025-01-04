@@ -48,8 +48,10 @@ record Protocol(String port, String name) implements Serializable {
      * @return A potentially cached instance of {@link Protocol} corresponding to the given port and name
      */
     static Protocol of(String port, String name) {
-        // Cache instances using the computed hash of the arguments; see Map.Entry.hashCode() for the algorithm used.
-        return CACHE.computeIfAbsent(port.hashCode() ^ name.toLowerCase().hashCode(), hash -> new Protocol(port, name));
+        // Cache instances using the hash of the arguments, if allowed; see Map.Entry.hashCode() for the algorithm used.
+        return Settings.FAST
+            ? new Protocol(port, name)
+            : CACHE.computeIfAbsent(port.hashCode() ^ name.toLowerCase().hashCode(), hash -> new Protocol(port, name));
 
         // TODO: Implement soft-reference-value-based caching or an eviction policy for the current cache instead. This
         //   would require weighing memory constraints against processing time constraints. Currently, we prefer faster

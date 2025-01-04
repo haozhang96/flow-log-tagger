@@ -69,4 +69,24 @@ interface Utils {
             Collector.Characteristics.CONCURRENT, Collector.Characteristics.UNORDERED
         );
     }
+
+    /**
+     * Release a given list of resources by invoking their clean-up methods where applicable.
+     *
+     * @param resources The list of resources to release
+     */
+    static void releaseResources(Object... resources) {
+        for (final var resource : resources) {
+            if (!(resource instanceof AutoCloseable closeable)) {
+                // We use this particular control flow to avoid deeply nesting the next block of statements.
+                continue;
+            }
+
+            try {
+                closeable.close();
+            } catch (Exception exception) {
+                Loggers.ERROR.accept("Failed to close resource; this will be ignored: " + resource, exception);
+            }
+        }
+    }
 }
