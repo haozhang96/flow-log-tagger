@@ -76,28 +76,28 @@ class FlowLogGenerator extends TableGenerator {
     }
 
     private static long accountID() {
-        return ThreadLocalRandom.current().nextLong(0L, 999_999_999_999L);
+        return ThreadLocalRandom.current().nextLong(999_999_999_999L);
     }
 
     private static String interfaceID() {
-        return "eni-" + Integer.toHexString(ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE));
+        return "eni-" + Integer.toHexString(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
     }
 
     private static String sourceAddress() {
         return "%d.%d.%d.%d".formatted(
-            ThreadLocalRandom.current().nextInt(0, 256),
-            ThreadLocalRandom.current().nextInt(0, 256),
-            ThreadLocalRandom.current().nextInt(0, 256),
-            ThreadLocalRandom.current().nextInt(0, 256)
+            ThreadLocalRandom.current().nextInt(256),
+            ThreadLocalRandom.current().nextInt(256),
+            ThreadLocalRandom.current().nextInt(256),
+            ThreadLocalRandom.current().nextInt(256)
         );
     }
 
     private static String destinationAddress() {
         return "%d.%d.%d.%d".formatted(
-            ThreadLocalRandom.current().nextInt(0, 256),
-            ThreadLocalRandom.current().nextInt(0, 256),
-            ThreadLocalRandom.current().nextInt(0, 256),
-            ThreadLocalRandom.current().nextInt(0, 256)
+            ThreadLocalRandom.current().nextInt(256),
+            ThreadLocalRandom.current().nextInt(256),
+            ThreadLocalRandom.current().nextInt(256),
+            ThreadLocalRandom.current().nextInt(256)
         );
     }
 

@@ -62,7 +62,7 @@ class UtilsTest extends BaseUnitTest {
         final var collectedCount =
             Collections
                 .nCopies(count, COLLECTION.iterator().next())
-                .parallelStream() // Ensure correctness under concurrency.
+                .parallelStream() // Test correctness under concurrency.
                 .collect(Utils.countingCollector());
         assert$(collectedCount == count, "Unexpected count: expected=%d, given=%d".formatted(count, collectedCount));
     }
@@ -73,6 +73,6 @@ class UtilsTest extends BaseUnitTest {
         final var closeCount = new AtomicInteger();
         final AutoCloseable resource = closeCount::getAndIncrement;
         Utils.releaseResources(Collections.nCopies(count, resource).toArray());
-        assert$(closeCount.get() == count, "Resource should have been closed");
+        assert$(closeCount.get() == count, "Resources should have been closed");
     }
 }

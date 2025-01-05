@@ -79,7 +79,10 @@ abstract class BaseUnitTest {
      */
     static void run(Class<?> testClass) {
         final var testInstance = instantiate(testClass);
+        final var testName = testClass.getSimpleName();
         final var failures = new ArrayList<Throwable>();
+        Loggers.INFO.accept(HORIZONTAL_RULE);
+        Loggers.INFO.accept("[@] Running tests: " + testName);
         Loggers.INFO.accept(HORIZONTAL_RULE);
 
         for (final var method : testClass.getDeclaredMethods()) {
@@ -104,15 +107,19 @@ abstract class BaseUnitTest {
             }
         }
 
-        final var testName = testClass.getSimpleName();
-        switch (failures.size()) {
-            case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testName);
-            case 1 -> throw new AssertionError("[!] Test failure: " + testName, failures.getFirst());
-            default -> {
-                var error = new AssertionError("[!] Multiple test failures: " + testName, failures.removeLast());
-                failures.reversed().forEach(error::addSuppressed); // Chain the remaining as suppressed exceptions.
-                throw error;
+        try {
+            switch (failures.size()) {
+                case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testName);
+                case 1 -> throw new AssertionError("[!] Test failure: " + testName, failures.getFirst());
+                default -> {
+                    var error = new AssertionError("[!] Multiple test failures: " + testName, failures.removeLast());
+                    failures.reversed().forEach(error::addSuppressed); // Chain the remaining as suppressed exceptions.
+                    throw error;
+                }
             }
+        } finally {
+            Loggers.INFO.accept(HORIZONTAL_RULE);
+            Loggers.INFO.accept(System.lineSeparator()); // Print two line breaks.
         }
     }
 
