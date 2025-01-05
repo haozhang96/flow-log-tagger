@@ -86,10 +86,8 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
     @Override
     public void close() throws IOException {
         try (writer) {
+            // Closing the BufferedWriter will flush it, thereby writing to the file.
             Loggers.INFO.accept("[<] Writing file: " + path);
-        } finally {
-            // We wouldn't know for sure whether anything was written at this point, but this assumption is most likely.
-            Loggers.INFO.accept("[#] Wrote file: " + path);
         }
     }
 }

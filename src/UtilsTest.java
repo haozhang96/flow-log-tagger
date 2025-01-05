@@ -1,8 +1,6 @@
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntFunction;
 
 class UtilsTest extends BaseUnitTest {
@@ -56,5 +54,25 @@ class UtilsTest extends BaseUnitTest {
     @Test
     void toArray_givenIterable_willReturnStreamContainingElements() {
         assert$(Arrays.asList(Utils.toArray(ITERABLE, ARRAY_CONSTRUCTOR)).equals(COLLECTION), "Array contains unexpected content");
+    }
+
+    @Test
+    void countingCollector_shouldCountStreamElementsCorrectly() {
+        final var count = ThreadLocalRandom.current().nextInt(1000);
+        final var collectedCount =
+            Collections
+                .nCopies(count, COLLECTION.iterator().next())
+                .parallelStream() // Ensure correctness under concurrency.
+                .collect(Utils.countingCollector());
+        assert$(collectedCount == count, "Unexpected count: expected=%d, given=%d".formatted(count, collectedCount));
+    }
+
+    @Test
+    void releaseResources_shouldCloseAllGivenResources() {
+        final var count = ThreadLocalRandom.current().nextInt(1000);
+        final var closeCount = new AtomicInteger();
+        final AutoCloseable resource = closeCount::getAndIncrement;
+        Utils.releaseResources(Collections.nCopies(count, resource).toArray());
+        assert$(closeCount.get() == count, "Resource should have been closed");
     }
 }
