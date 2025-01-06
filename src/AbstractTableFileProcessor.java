@@ -1,3 +1,4 @@
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
@@ -87,6 +88,9 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
                 .stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey);
+        } catch (UncheckedIOException exception) {
+            // Do not fail if we can't read the file to infer the separator; this is an optional feature.
+            return Optional.empty();
         }
     }
 }

@@ -82,10 +82,13 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
      *
      * @param path The {@link Path} of the file to read lazily into a {@link Stream} of non-empty lines
      *
+     * @throws UncheckedIOException An exception wrapping an underlying {@link IOException} thrown from
+     *                              {@link Files#lines(Path)}
+     *
      * @see Files#lines(Path)
      */
     @SuppressWarnings("resource") // The stream must be closed by the caller.
-    static Stream<String> lines(Path path) {
+    static Stream<String> lines(Path path) throws UncheckedIOException {
         try {
             final var lines = Files.lines(path);
             return Settings.FAST ? lines : lines.filter(Predicate.not(String::isEmpty));
@@ -106,6 +109,9 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     private static boolean hasHeaderRow(Path path) {
         try (var firstLine = lines(path).limit(1L)) {
             return firstLine.allMatch(TableFileReader::isHeaderRow);
+        } catch (UncheckedIOException exception) {
+            // Do not fail if we can't read the file to determine the header row; this is an optional feature.
+            return false;
         }
     }
 

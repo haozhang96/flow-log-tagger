@@ -27,6 +27,14 @@ abstract class BaseUnitTest {
     private static final String HORIZONTAL_RULE = "=".repeat(100);
 
     //==================================================================================================================
+    // Bootstrap
+    //==================================================================================================================
+
+    static {
+        System.setProperty("debug", Boolean.toString(true)); // Always enable debugging for testing.
+    }
+
+    //==================================================================================================================
     // Test Support
     //==================================================================================================================
 
@@ -79,10 +87,10 @@ abstract class BaseUnitTest {
      */
     static void run(Class<?> testClass) {
         final var testInstance = instantiate(testClass);
-        final var testName = testClass.getSimpleName();
+        final var testSuiteName = testClass.getSimpleName();
         final var failures = new ArrayList<Throwable>();
         Loggers.INFO.accept(HORIZONTAL_RULE);
-        Loggers.INFO.accept("[@] Running tests: " + testName);
+        Loggers.INFO.accept("[@] Running tests: " + testSuiteName);
         Loggers.INFO.accept(HORIZONTAL_RULE);
 
         for (final var method : testClass.getDeclaredMethods()) {
@@ -90,17 +98,18 @@ abstract class BaseUnitTest {
                 continue;
             }
 
+            final var testName = testSuiteName + "." + method.getName();
             try {
-                Loggers.INFO.accept("[@] Running test: " + method);
+                Loggers.INFO.accept("[@] Running test: " + testName);
                 MethodHandles
                     .privateLookupIn(testClass, LOOKUP)
                     .unreflect(method)
                     .bindTo(testInstance)
                     .invoke();
-                Loggers.INFO.accept("[^] Test passed: " + method);
+                Loggers.INFO.accept("[^] Test passed: " + testName);
             } catch (Throwable cause) {
                 final var status = cause instanceof AssertionError ? "assertion failure" : "error";
-                Loggers.ERROR.accept("[!] Test %s: %s".formatted(status, method), cause);
+                Loggers.ERROR.accept("[!] Test %s: %s".formatted(status, testName), cause);
                 failures.add(cause);
             } finally {
                 Loggers.INFO.accept(HORIZONTAL_RULE);
@@ -109,10 +118,10 @@ abstract class BaseUnitTest {
 
         try {
             switch (failures.size()) {
-                case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testName);
-                case 1 -> throw new AssertionError("[!] Test failure: " + testName, failures.getFirst());
+                case 0 -> Loggers.INFO.accept("[^] All tests passed: " + testSuiteName);
+                case 1 -> throw new AssertionError("Test failure: " + testSuiteName, failures.getFirst());
                 default -> {
-                    var error = new AssertionError("[!] Multiple test failures: " + testName, failures.removeLast());
+                    var error = new AssertionError("Multiple test failures: " + testSuiteName, failures.removeLast());
                     failures.reversed().forEach(error::addSuppressed); // Chain the remaining as suppressed exceptions.
                     throw error;
                 }

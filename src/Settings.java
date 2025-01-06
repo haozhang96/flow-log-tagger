@@ -32,6 +32,9 @@ interface Settings {
      * </ul>
      * <br/>
      *
+     * This setting implies the {@link #PARALLEL} setting.
+     * <br/><br/>
+     *
      * The default value is {@code true}.
      */
     boolean FAST = getProperty("fast", true);
@@ -40,7 +43,7 @@ interface Settings {
      * Allow {@link FlowLogProcessor} to process its input concurrently.
      * <br/><br/>
      *
-     * The default value is {@code true}; the {@link #FAST} option implies this option.
+     * The default value is {@code true}; the {@link #FAST} setting implies this setting.
      */
     boolean PARALLEL = FAST || getProperty("parallel", true);
 

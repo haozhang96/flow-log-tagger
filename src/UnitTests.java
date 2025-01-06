@@ -17,14 +17,15 @@ public class UnitTests extends BaseUnitTest {
             TableFileWriterTest.class,
             TableGeneratorTest.class,
             FlowLogGeneratorTest.class,
-            FlowLogProcessorTest.class
+            FlowLogProcessorTest.class,
+            MainTest.class
         );
 
     //==================================================================================================================
     // Bootstrap
     //==================================================================================================================
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         TESTS.forEach(BaseUnitTest::run);
     }
 }

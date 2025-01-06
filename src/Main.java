@@ -7,7 +7,7 @@ public class Main {
     // Bootstrap
     //==================================================================================================================
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         final var overwrite = Settings.OVERWRITE ? StandardOpenOption.TRUNCATE_EXISTING : StandardOpenOption.CREATE_NEW;
         final OpenOption[] options = {StandardOpenOption.CREATE, overwrite};
 
