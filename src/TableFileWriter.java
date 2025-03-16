@@ -85,9 +85,13 @@ non-sealed class TableFileWriter extends AbstractTableFileProcessor implements T
 
     @Override
     public void close() throws IOException {
-        try (writer) {
-            // Closing the BufferedWriter will flush it, thereby writing to the file.
-            Loggers.INFO.accept("[<] Writing file: " + path);
+        Loggers.INFO.accept("[<] Writing file: " + path);
+        writer.close(); // Closing the BufferedWriter will flush it, thereby writing to the file.
+
+        final var kib = Files.size(path) / (double) Constants.KIBIBYTE_SCALE;
+        Loggers.INFO.accept("[#] Wrote ~%.2f KiB to file: %s".formatted(kib, path));
+        if (kib <= 1L << 5) {
+            Loggers.INFO.accept(Files.readString(path).indent(4).stripTrailing());
         }
     }
 }

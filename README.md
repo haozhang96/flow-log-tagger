@@ -25,7 +25,7 @@ command:
 java -cp out Main <N MiB>
 ```
 
-In all cases, inspect the `data/output.csv` file for the program's output results.
+In all cases, inspect the `out/output.csv` file for the program's output results.
 
 ## Testing
 To compile the Java program's unit tests, run the following command:
