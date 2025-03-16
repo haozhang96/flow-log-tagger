@@ -8,10 +8,10 @@ entries based on their IANA-assignedd protocol number and destination port
 This program was initially written for a programming assessment with the goals of minimal dependencies and maximum
 portability such that it would ideally run on many systems with minimal effort. Over time, I refactored the codebase to
 highlight my knowledge of the Java programming language and decision-making within the constraint of simple compilation
-and execution. I always prefer using a well-tested library where possible, but these constraints limit my usage to only
-the standard libraries included with the standard Java runtime. Thus, this codebase does not accurately reflect my
-software engineering principles, but rather showcase my ability to solve practical programming challenges under
-constraints.
+and execution. I always prefer using well-tested libraries over reinventing the wheel where possible, but these
+constraints limit my usage to only the standard libraries included with the standard Java runtime. Thus, this codebase
+does not accurately reflect my software engineering principles, but rather showcase my ability to solve practical
+programming challenges under constraints.
 
 ## Requirements
 * Java (JDK) 21
