@@ -1,5 +1,18 @@
 # flow-log-tagger
 
+A fully self-contained Java program that analyzes
+[AWS flow logs (v2)](https://docs.aws.amazon.com/vpc/latest/userguide/flow-log-records.html) and categorizes and tags
+entries based on their IANA-assignedd protocol number and destination port
+
+## Motivation
+This program was initially written for a programming assessment with the goals of minimal dependencies and maximum
+portability such that it would ideally run on many systems with minimal effort. Over time, I refactored the codebase to
+highlight my knowledge of the Java programming language and decision-making within the constraint of simple compilation
+and execution. I always prefer using a well-tested library where possible, but these constraints limit my usage to only
+the standard libraries included with the standard Java runtime. Thus, this codebase does not accurately reflect my
+software engineering principles, but rather showcase my ability to solve practical programming challenges under
+constraints.
+
 ## Requirements
 * Java (JDK) 21
 
@@ -52,6 +65,9 @@ java -cp out UnitTests
 * Hash-based comparisons were used for performant lookups where possible.
 
 ## Design Choices
+* Packages were avoided to simplify compilation and execution from the command line. If you would like to see how I
+  organize Java packages in a less constrained environment, check out another one of my Java projects,
+  [cxf-camel-services](https://github.com/haozhang96/cxf-camel-services).
 * `java.util.Objects.requireNonNull(...)` was used for runtime null-checking to avoid external dependencies required for
   compile-time null-checking, such as external annotations (e.g., `javax.annotation.Nonnull`).
 * `java.lang.System.out|err` were used instead of `java.lang.System.Logger` or `java.util.logging.Logger` due to overly
@@ -72,8 +88,9 @@ java -cp out UnitTests
   [try-with-resources statements](https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html).
 
 ## Example
-[input.log](data/input.log)
-```
+[Flow log](res/input.log) (can be headerless)
+```tsv
+version account-id interface-id srcaddr dstaddr srcport dstport protocol packets bytes start end action log-status
 2 123456789012 eni-0a1b2c3d 10.0.1.201 198.51.100.2 443 49153 6 25 20000 1620140761 1620140821 ACCEPT OK
 2 123456789012 eni-4d3c2b1a 192.168.1.100 203.0.113.101 23 49154 6 15 12000 1620140761 1620140821 REJECT OK
 2 123456789012 eni-5e6f7g8h 192.168.1.101 198.51.100.3 25 49155 6 10 8000 1620140761 1620140821 ACCEPT OK
@@ -92,8 +109,24 @@ java -cp out UnitTests
 2 123456789012 eni-4h5i6j7k 172.16.0.2 192.0.2.146 49154 22 6 9 4500 1620140661 1620140721 ACCEPT OK
 ```
 
-output.csv
+[Lookup table](res/lookup_table.csv) (can be headerless)
+```csv
+dstport,name,tag
+25,tcp,sv_P1
+68,udp,sv_P2
+23,tcp,sv_P1
+31,udp,SV_P3
+443,tcp,sv_P2
+22,tcp,sv_P4
+3389,tcp,sv_P5
+0,icmp,sv_P5
+110,tcp,email
+993,tcp,email
+143,tcp,email
 ```
+
+Output
+```csv
 Tag Counts:
 Tag,Count
 sv_P2,1
