@@ -20,8 +20,7 @@ import java.util.function.Supplier;
  */
 abstract class BaseUnitTest {
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
-    private static final Class<?> CLASS = LOOKUP.lookupClass();
-    private static final ClassLoader CLASS_LOADER = CLASS.getClassLoader();
+    private static final ClassLoader CLASS_LOADER = LOOKUP.lookupClass().getClassLoader();
     private static final StackWalker STACK_WALKER = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
     private static final Unsafe UNSAFE = getUnsafe();
     private static final String HORIZONTAL_RULE = "=".repeat(100);
@@ -53,14 +52,7 @@ abstract class BaseUnitTest {
      * @see Test @Test
      */
     static void run() {
-        STACK_WALKER
-            .walk(stackFrames ->
-                stackFrames
-                    .map(StackWalker.StackFrame::getDeclaringClass)
-                    .dropWhile(CLASS::equals)
-                    .findFirst()
-            )
-            .ifPresentOrElse(BaseUnitTest::run, () -> assert$(false, "Unable to determine test class."));
+        run(STACK_WALKER.getCallerClass());
     }
 
     /**
