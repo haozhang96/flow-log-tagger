@@ -44,7 +44,7 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
      */
     TableFileReader(Path path, String separator, Boolean hasHeaderRow) {
         super(path, separator);
-        this.hasHeaderRow = Objects.requireNonNullElseGet(hasHeaderRow, () -> hasHeaderRow(path));
+        this.hasHeaderRow = Objects.requireNonNullElseGet(hasHeaderRow, this::hasHeaderRow);
     }
 
     //==================================================================================================================
@@ -102,13 +102,12 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
     //==================================================================================================================
 
     /**
-     * Determine whether a given {@link Path}'s file has a header row by comparing its first line's character types.
-     *
-     * @param path The {@link Path} of the file to read the first line of to determine whether it is the header row
+     * Determine whether this {@link TableFileReader}'s file has a header row by comparing its first line's character
+     *   types.
      */
-    private static boolean hasHeaderRow(Path path) {
+    private boolean hasHeaderRow() {
         try (var firstLine = lines(path).limit(1L)) {
-            return firstLine.allMatch(TableFileReader::isHeaderRow);
+            return firstLine.allMatch(this::isHeaderRow);
         } catch (UncheckedIOException exception) {
             // Do not fail if we can't read the file to determine the header row; this is an optional feature.
             return false;
@@ -120,14 +119,14 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
      *
      * @param line The line of a file to determine whether it is the header row
      */
-    private static boolean isHeaderRow(String line) {
+    private boolean isHeaderRow(String line) {
         return line
             .codePoints()
             .boxed()
             .collect(Collectors.teeing(
                 Collectors.filtering(Character::isAlphabetic, Collectors.counting()),
                 Collectors.filtering(Character::isDigit, Collectors.counting()),
-                TableFileReader::isHeaderRow
+                this::isHeaderRow
             ));
     }
 
@@ -143,7 +142,7 @@ non-sealed class TableFileReader extends AbstractTableFileProcessor implements T
      * @param letters The number of {@linkplain Character#isAlphabetic(int) letters} in the line of a file
      * @param digits The number of {@linkplain Character#isDigit(int) digits} in the line of a file
      */
-    private static boolean isHeaderRow(long letters, long digits) {
+    private boolean isHeaderRow(long letters, long digits) {
         return letters >= digits * 5L;
     }
 }

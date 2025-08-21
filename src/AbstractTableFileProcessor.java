@@ -27,7 +27,7 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
      */
     AbstractTableFileProcessor(Path path, String separator) {
         this.path = Objects.requireNonNull(path);
-        this.separator = Objects.requireNonNullElseGet(separator, () -> inferSeparator(path));
+        this.separator = Objects.requireNonNullElseGet(separator, this::inferSeparator);
     }
 
     //==================================================================================================================
@@ -44,24 +44,21 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
     //==================================================================================================================
 
     /**
-     * Infer the column separator to use for a given {@link Path}'s file.
-     *
-     * @param path The {@link Path} of the file to infer the column separator to use
+     * Infer the column separator to use for this {@link AbstractTableFileProcessor}'s file.
      */
-    private static String inferSeparator(Path path) {
-        return inferSeparatorByExtension(path)
-            .or(() -> inferSeparatorByFirstLine(path))
+    private String inferSeparator() {
+        return inferSeparatorByExtension()
+            .or(this::inferSeparatorByFirstLine)
             .orElseGet(() -> Constants.SEPARATORS.get(Constants.UNKNOWN)); // Fall back to the default separator.
     }
 
     /**
-     * Determine the column separator to use by using a given {@link Path}'s file extension.
-     *
-     * @param path The {@link Path} whose file extension is to be used to determine the column separator to use
+     * Determine the column separator to use by using this {@link AbstractTableFileProcessor}'s {@link Path}'s
+     *   extension.
      *
      * @see Constants#SEPARATORS
      */
-    private static Optional<String> inferSeparatorByExtension(Path path) {
+    private Optional<String> inferSeparatorByExtension() {
         return Optional
             .ofNullable(path.getFileName())
             .map(Path::toString)
@@ -72,12 +69,10 @@ sealed abstract class AbstractTableFileProcessor permits TableFileReader, TableF
     }
 
     /**
-     * Determine the column separator to use by using a given {@link Path}'s file's first line, using the most common
-     *   non-alphanumeric character occurrence.
-     *
-     * @param path The {@link Path} whose file's first line is to be used to determine the column separator to use
+     * Determine the column separator to use by using this {@link AbstractTableFileProcessor}'s file's first line, using
+     *   the most common non-alphanumeric character occurrence.
      */
-    private static Optional<String> inferSeparatorByFirstLine(Path path) {
+    private Optional<String> inferSeparatorByFirstLine() {
         try (var firstLine = TableFileReader.lines(path).limit(1L)) {
             return firstLine
                 .flatMapToInt(String::codePoints)
